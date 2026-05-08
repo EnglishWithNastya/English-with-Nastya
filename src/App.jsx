@@ -232,11 +232,62 @@ function StudentPortal({ onBack }) {
     Denis: "denis2026",
   };
 
+  const germanStudents = ["Sonja", "Vanja"];
+
+  const weeklyWords = {
+    en: [
+      { word: "breakfast", answer: "завтрак", options: ["завтрак", "поезд", "тетрадь", "окно"] },
+      { word: "umbrella", answer: "зонт", options: ["ключ", "зонт", "сумка", "вода"] },
+      { word: "homework", answer: "домашнее задание", options: ["покупка", "домашнее задание", "звонок", "погода"] },
+      { word: "wallet", answer: "кошелёк", options: ["кошелёк", "зеркало", "ручка", "стул"] },
+      { word: "appointment", answer: "встреча / запись", options: ["встреча / запись", "завтрак", "рубашка", "улица"] },
+      { word: "neighbour", answer: "сосед", options: ["врач", "сосед", "учитель", "водитель"] },
+      { word: "receipt", answer: "чек", options: ["чек", "карта", "дверь", "чай"] },
+      { word: "schedule", answer: "расписание", options: ["расписание", "ошибка", "молоко", "письмо"] },
+    ],
+    de: [
+      { word: "das Frühstück", answer: "завтрак", options: ["завтрак", "поезд", "тетрадь", "окно"] },
+      { word: "der Regenschirm", answer: "зонт", options: ["ключ", "зонт", "сумка", "вода"] },
+      { word: "die Hausaufgabe", answer: "домашнее задание", options: ["покупка", "домашнее задание", "звонок", "погода"] },
+      { word: "die Geldbörse", answer: "кошелёк", options: ["кошелёк", "зеркало", "ручка", "стул"] },
+      { word: "der Termin", answer: "встреча / запись", options: ["встреча / запись", "завтрак", "рубашка", "улица"] },
+      { word: "der Nachbar", answer: "сосед", options: ["врач", "сосед", "учитель", "водитель"] },
+      { word: "die Quittung", answer: "чек", options: ["чек", "карта", "дверь", "чай"] },
+      { word: "der Stundenplan", answer: "расписание", options: ["расписание", "ошибка", "молоко", "письмо"] },
+    ],
+  };
+
+  function getMondayWeekKey() {
+    const now = new Date();
+    const day = now.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    return monday.toISOString().slice(0, 10);
+  }
+
+  function getQuizForStudent(studentName) {
+    const language = germanStudents.includes(studentName) ? "de" : "en";
+    const list = weeklyWords[language];
+    const weekKey = getMondayWeekKey();
+    const start = new Date("2026-01-05T00:00:00");
+    const monday = new Date(`${weekKey}T00:00:00`);
+    const weekIndex = Math.max(0, Math.floor((monday - start) / (7 * 24 * 60 * 60 * 1000)));
+    return { ...list[weekIndex % list.length], language, weekKey, id: `${studentName}-${language}-${weekKey}` };
+  }
+
+  function readQuizState(studentName) {
+    const quiz = getQuizForStudent(studentName);
+    const raw = localStorage.getItem(`weekly-word-${quiz.id}`);
+    return raw ? JSON.parse(raw) : { answered: false, correct: false, points: 0, selected: null };
+  }
+
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [student, setStudent] = useState(null);
   const [view, setView] = useState(null);
   const [error, setError] = useState("");
+  const [quizState, setQuizState] = useState(null);
 
   const login = () => {
     const cleanName = name.trim();
@@ -245,6 +296,7 @@ function StudentPortal({ onBack }) {
       setView(null);
       setError("");
       setPassword("");
+      setQuizState(readQuizState(cleanName));
       return;
     }
     setError("Неверное имя или пароль. Проверьте данные и попробуйте ещё раз.");
@@ -256,6 +308,17 @@ function StudentPortal({ onBack }) {
     setName("");
     setPassword("");
     setError("");
+    setQuizState(null);
+  };
+
+  const currentQuiz = student ? getQuizForStudent(student) : null;
+
+  const answerWeeklyQuiz = (option) => {
+    if (!student || !currentQuiz || quizState?.answered) return;
+    const correct = option === currentQuiz.answer;
+    const nextState = { answered: true, correct, points: correct ? 10 : 0, selected: option };
+    localStorage.setItem(`weekly-word-${currentQuiz.id}`, JSON.stringify(nextState));
+    setQuizState(nextState);
   };
 
   if (!student) {
@@ -310,19 +373,51 @@ function StudentPortal({ onBack }) {
             <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Профиль ученика: {student}</div>
             <h1 className="text-4xl font-black">{view === "student" ? "Информация для ученика" : "Информация для родителей"}</h1>
             {view === "student" ? (
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
-                {[
-                  ["Следующий урок", "Дата и время будут добавлены здесь."],
-                  ["Домашнее задание", "Здесь будет домашнее задание после урока."],
-                  ["Материалы", "Ссылки на Miro, слова, грамматику и упражнения."],
-                  ["Цель", "Короткая цель на ближайшие занятия."],
-                ].map(([title, text]) => (
-                  <div key={title} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
-                    <h3 className="text-xl font-black">{title}</h3>
-                    <p className="mt-2 leading-7 text-slate-600">{text}</p>
+              <>
+                <div className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-cyan-50 via-white to-yellow-50 p-6 ring-1 ring-cyan-100">
+                  <div className="mb-3 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">
+                    Слово недели • обновляется каждый понедельник в 00:00
                   </div>
-                ))}
-              </div>
+                  <h2 className="text-3xl font-black text-slate-950">{currentQuiz?.word}</h2>
+                  <p className="mt-2 text-slate-600">
+                    Выберите правильный перевод. За правильный ответ — 10 баллов. За ошибку — 0 баллов.
+                  </p>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {currentQuiz?.options.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => answerWeeklyQuiz(option)}
+                        disabled={quizState?.answered}
+                        className={`rounded-2xl p-4 text-left font-black ring-1 transition ${quizState?.answered && option === currentQuiz.answer ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : quizState?.answered && option === quizState.selected ? "bg-red-50 text-red-700 ring-red-200" : "bg-white text-slate-800 ring-slate-100 hover:bg-cyan-50"}`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                  {quizState?.answered && (
+                    <div className={`mt-5 rounded-2xl p-4 font-black ${quizState.correct ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>
+                      {quizState.correct ? "Правильно! Вы получили 10 баллов." : `Неправильно. Правильный ответ: ${currentQuiz.answer}. Баллы: 0.`}
+                    </div>
+                  )}
+                  <div className="mt-4 rounded-2xl bg-white p-4 font-bold text-slate-700 shadow-sm">
+                    Баллы за это слово недели: {quizState?.points || 0} / 10
+                  </div>
+                </div>
+
+                <div className="mt-8 grid gap-4 md:grid-cols-2">
+                  {[
+                    ["Следующий урок", "Дата и время будут добавлены здесь."],
+                    ["Домашнее задание", "Здесь будет домашнее задание после урока."],
+                    ["Материалы", "Ссылки на Miro, слова, грамматику и упражнения."],
+                    ["Цель", "Короткая цель на ближайшие занятия."],
+                  ].map(([title, text]) => (
+                    <div key={title} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+                      <h3 className="text-xl font-black">{title}</h3>
+                      <p className="mt-2 leading-7 text-slate-600">{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="mt-8 grid gap-4 md:grid-cols-2">
                 {[
