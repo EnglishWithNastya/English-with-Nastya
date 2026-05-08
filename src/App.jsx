@@ -234,6 +234,18 @@ function StudentPortal({ onBack }) {
 
   const germanStudents = ["Sonja", "Vanja"];
 
+  const lessonSchedule = {
+    Max: ["Суббота, 20:30–21:30"],
+    Masha: ["Четверг, 19:30–20:30", "Суббота, 11:00–12:00"],
+    Polina: ["Понедельник, 15:00–16:00", "Вторник, 15:00–16:00", "Среда, 17:00–18:00", "Четверг, 17:00–18:00", "Пятница, 15:00–16:00", "Суббота, 15:00–16:00"],
+    Igor: ["Среда, 16:00–17:00", "Суббота, 12:00–13:00"],
+    Sonja: ["Среда, 12:00–13:00 — немецкий", "Суббота, 13:00–14:00 — немецкий"],
+    Vanja: ["Понедельник, 19:30–20:30 — немецкий", "Четверг, 20:30–21:30 — немецкий"],
+    Katya: ["Индивидуальное расписание будет добавлено позже"],
+    Amelia: ["Индивидуальное расписание будет добавлено позже"],
+    Denis: ["Понедельник, 18:00–19:00", "Среда, 18:00–19:00", "Пятница, 18:00–19:00"],
+  };
+
   const weeklyWords = {
     en: [
       { word: "breakfast", answer: "завтрак", options: ["завтрак", "поезд", "тетрадь", "окно"] },
@@ -371,7 +383,7 @@ function StudentPortal({ onBack }) {
           </div>
           <Card className="p-8">
             <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Профиль ученика: {student}</div>
-            <h1 className="text-4xl font-black">{view === "student" ? "Информация для ученика" : "Информация для родителей"}</h1>
+            <h1 className="text-4xl font-black">{view === "student" ? "Информация для ученика" : view === "parents" ? "Информация для родителей" : "Учебный план"}</h1>
             {view === "student" ? (
               <>
                 <div className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-cyan-50 via-white to-yellow-50 p-6 ring-1 ring-cyan-100">
@@ -418,7 +430,7 @@ function StudentPortal({ onBack }) {
                   ))}
                 </div>
               </>
-            ) : (
+            ) : view === "parents" ? (
               <div className="mt-8 grid gap-4 md:grid-cols-2">
                 {[
                   ["Прогресс", "Здесь можно кратко фиксировать прогресс ученика."],
@@ -431,6 +443,23 @@ function StudentPortal({ onBack }) {
                     <p className="mt-2 leading-7 text-slate-600">{text}</p>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-cyan-50 via-white to-yellow-50 p-6 ring-1 ring-cyan-100">
+                <div className="mb-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">
+                  Расписание ученика: {student}
+                </div>
+                <h2 className="text-3xl font-black text-slate-950">Ваши занятия на неделе</h2>
+                <div className="mt-6 grid gap-3">
+                  {(lessonSchedule[student] || ["Расписание будет добавлено позже"]).map((lesson) => (
+                    <div key={lesson} className="rounded-2xl bg-white p-4 font-bold text-slate-800 shadow-sm ring-1 ring-slate-100">
+                      {lesson}
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-5 text-sm font-semibold text-slate-600">
+                  Если время изменится, актуальная информация будет обновлена в этом разделе.
+                </p>
               </div>
             )}
           </Card>
@@ -449,7 +478,7 @@ function StudentPortal({ onBack }) {
         <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Вы вошли как: {student}</div>
         <h1 className="text-4xl font-black sm:text-5xl">Личный профиль</h1>
         <p className="mt-4 text-lg text-slate-600">Выберите, какой раздел открыть.</p>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
           <button onClick={() => setView("student")} className="rounded-[2rem] bg-white p-8 text-left shadow-xl ring-1 ring-cyan-100 transition hover:-translate-y-1">
             <div className="text-5xl">👤</div>
             <h2 className="mt-5 text-3xl font-black">Для ученика</h2>
@@ -459,6 +488,11 @@ function StudentPortal({ onBack }) {
             <div className="text-5xl">👨‍👩‍👧</div>
             <h2 className="mt-5 text-3xl font-black">Для родителей</h2>
             <p className="mt-3 leading-7 text-slate-600">Прогресс, посещаемость, рекомендации и организационная информация.</p>
+          </button>
+          <button onClick={() => setView("schedule")} className="rounded-[2rem] bg-white p-8 text-left shadow-xl ring-1 ring-violet-100 transition hover:-translate-y-1">
+            <div className="text-5xl">📅</div>
+            <h2 className="mt-5 text-3xl font-black">Учебный план</h2>
+            <p className="mt-3 leading-7 text-slate-600">Ваше актуальное еженедельное расписание занятий.</p>
           </button>
         </div>
       </div>
