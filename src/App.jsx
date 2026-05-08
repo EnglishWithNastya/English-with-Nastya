@@ -220,22 +220,100 @@ function Home({ onChoose }) {
 }
 
 function StudentPortal({ onBack }) {
-  const [selected, setSelected] = useState(null);
-  const [view, setView] = useState(null);
+  const accounts = {
+    Max: "max2026",
+    Masha: "masha2026",
+    Polina: "polina2026",
+    Igor: "igor2026",
+    Sonja: "sonja2026",
+    Vanja: "vanja2026",
+    Katya: "katya2026",
+    Amelia: "amelia2026",
+    Denis: "denis2026",
+  };
 
-  if (selected && view) {
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [student, setStudent] = useState(null);
+  const [view, setView] = useState(null);
+  const [error, setError] = useState("");
+
+  const login = () => {
+    const cleanName = name.trim();
+    if (accounts[cleanName] && accounts[cleanName] === password) {
+      setStudent(cleanName);
+      setView(null);
+      setError("");
+      setPassword("");
+      return;
+    }
+    setError("Неверное имя или пароль. Проверьте данные и попробуйте ещё раз.");
+  };
+
+  const logout = () => {
+    setStudent(null);
+    setView(null);
+    setName("");
+    setPassword("");
+    setError("");
+  };
+
+  if (!student) {
+    return (
+      <div className="min-h-screen bg-[#f7fbff] px-4 py-10 sm:px-6 lg:px-8">
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <div className="absolute -left-20 top-16 h-72 w-72 rounded-full bg-cyan-200/55 blur-3xl" />
+          <div className="absolute right-0 top-32 h-96 w-96 rounded-full bg-yellow-200/55 blur-3xl" />
+          <div className="absolute bottom-24 left-1/3 h-80 w-80 rounded-full bg-violet-200/45 blur-3xl" />
+        </div>
+        <div className="mx-auto max-w-5xl">
+          <button onClick={onBack} className="mb-6 rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← На главную</button>
+          <div className="grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <motion.div initial="hidden" animate="visible" variants={stagger}>
+              <motion.div variants={fadeUp} className="mb-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-700 shadow-sm ring-1 ring-cyan-100">Личный кабинет ученика</motion.div>
+              <motion.h1 variants={fadeUp} className="text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">Войдите в свой профиль</motion.h1>
+              <motion.p variants={fadeUp} className="mt-5 text-lg leading-8 text-slate-600">Введите своё имя и пароль. После входа вы увидите только свой личный профиль, материалы, домашние задания и информацию для родителей.</motion.p>
+              <motion.div variants={fadeUp} className="mt-6 rounded-3xl bg-yellow-50 p-5 font-bold text-orange-800 ring-1 ring-yellow-100">Данные каждого ученика открываются только после входа.</motion.div>
+            </motion.div>
+
+            <Card className="p-7">
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500 to-violet-600 text-3xl text-white">👤</div>
+              <h2 className="text-3xl font-black">Вход для ученика</h2>
+              <div className="mt-6 grid gap-4">
+                <label className="grid gap-2 text-sm font-bold text-slate-700">
+                  Имя пользователя
+                  <input value={name} onChange={(e) => setName(e.target.value)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Например: Max" />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-slate-700">
+                  Пароль
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && login()} type="password" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Введите пароль" />
+                </label>
+                {error && <div className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 ring-1 ring-red-100">{error}</div>}
+                <Button onClick={login} className="w-full">Войти в профиль</Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view) {
     return (
       <div className="min-h-screen bg-[#f7fbff] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          <button onClick={() => setView(null)} className="mb-6 rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← Назад к выбору раздела</button>
+          <div className="mb-6 flex flex-wrap gap-3">
+            <button onClick={() => setView(null)} className="rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← Назад к разделам</button>
+            <button onClick={logout} className="rounded-2xl bg-slate-950 px-4 py-3 font-black text-white shadow-sm">Выйти</button>
+          </div>
           <Card className="p-8">
-            <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Профиль ученика: {selected}</div>
+            <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Профиль ученика: {student}</div>
             <h1 className="text-4xl font-black">{view === "student" ? "Информация для ученика" : "Информация для родителей"}</h1>
             {view === "student" ? (
               <div className="mt-8 grid gap-4 md:grid-cols-2">
                 {[
-                  ["Следующий урок", "Дата и время будут добавлены позже."],
-                  ["Домашнее задание", "Здесь можно разместить задания после урока."],
+                  ["Следующий урок", "Дата и время будут добавлены здесь."],
+                  ["Домашнее задание", "Здесь будет домашнее задание после урока."],
                   ["Материалы", "Ссылки на Miro, слова, грамматику и упражнения."],
                   ["Цель", "Короткая цель на ближайшие занятия."],
                 ].map(([title, text]) => (
@@ -266,47 +344,27 @@ function StudentPortal({ onBack }) {
     );
   }
 
-  if (selected) {
-    return (
-      <div className="min-h-screen bg-[#f7fbff] px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl text-center">
-          <button onClick={() => setSelected(null)} className="mb-6 rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← Назад к списку учеников</button>
-          <h1 className="text-4xl font-black sm:text-5xl">Профиль ученика: {selected}</h1>
-          <p className="mt-4 text-lg text-slate-600">Выберите, какой раздел открыть.</p>
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            <button onClick={() => setView("student")} className="rounded-[2rem] bg-white p-8 text-left shadow-xl ring-1 ring-cyan-100 transition hover:-translate-y-1">
-              <div className="text-5xl">👤</div>
-              <h2 className="mt-5 text-3xl font-black">Для ученика</h2>
-              <p className="mt-3 leading-7 text-slate-600">Домашнее задание, материалы, цель урока и полезные заметки.</p>
-            </button>
-            <button onClick={() => setView("parents")} className="rounded-[2rem] bg-white p-8 text-left shadow-xl ring-1 ring-yellow-100 transition hover:-translate-y-1">
-              <div className="text-5xl">👨‍👩‍👧</div>
-              <h2 className="mt-5 text-3xl font-black">Для родителей</h2>
-              <p className="mt-3 leading-7 text-slate-600">Прогресс, посещаемость, рекомендации и организационная информация.</p>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#f7fbff] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <button onClick={onBack} className="mb-6 rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← На главную</button>
-        <SectionHeader eyebrow="Личный кабинет" title="Выберите профиль ученика" text="У каждого ученика есть отдельный профиль. После выбора имени можно открыть информацию для ученика или для родителей." />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {students.map((name) => (
-            <button key={name} onClick={() => setSelected(name)} className="rounded-[1.75rem] bg-white p-6 text-left shadow-lg ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-100 to-violet-100 text-2xl">👤</div>
-                <div>
-                  <h3 className="text-2xl font-black">{name}</h3>
-                  <p className="text-sm font-semibold text-slate-500">Открыть профиль</p>
-                </div>
-              </div>
-            </button>
-          ))}
+      <div className="mx-auto max-w-5xl text-center">
+        <div className="mb-6 flex flex-wrap justify-center gap-3">
+          <button onClick={onBack} className="rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← На главную</button>
+          <button onClick={logout} className="rounded-2xl bg-slate-950 px-4 py-3 font-black text-white shadow-sm">Выйти</button>
+        </div>
+        <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Вы вошли как: {student}</div>
+        <h1 className="text-4xl font-black sm:text-5xl">Личный профиль</h1>
+        <p className="mt-4 text-lg text-slate-600">Выберите, какой раздел открыть.</p>
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          <button onClick={() => setView("student")} className="rounded-[2rem] bg-white p-8 text-left shadow-xl ring-1 ring-cyan-100 transition hover:-translate-y-1">
+            <div className="text-5xl">👤</div>
+            <h2 className="mt-5 text-3xl font-black">Для ученика</h2>
+            <p className="mt-3 leading-7 text-slate-600">Домашнее задание, материалы, цель урока и полезные заметки.</p>
+          </button>
+          <button onClick={() => setView("parents")} className="rounded-[2rem] bg-white p-8 text-left shadow-xl ring-1 ring-yellow-100 transition hover:-translate-y-1">
+            <div className="text-5xl">👨‍👩‍👧</div>
+            <h2 className="mt-5 text-3xl font-black">Для родителей</h2>
+            <p className="mt-3 leading-7 text-slate-600">Прогресс, посещаемость, рекомендации и организационная информация.</p>
+          </button>
         </div>
       </div>
     </div>
