@@ -500,10 +500,201 @@ function StudentPortal({ onBack }) {
   );
 }
 
+function LevelTest({ type }) {
+  const [started, setStarted] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [levelIndex, setLevelIndex] = useState(0);
+  const [history, setHistory] = useState([]);
+  const [finished, setFinished] = useState(false);
+
+  const levels = ["A0", "A1", "A2", "B1", "B2", "C1", "C2"];
+
+  const questionBank = type === "en" ? {
+    A0: [
+      { q: "What ___ your name?", options: ["is", "are", "am", "be"], correct: "is" },
+      { q: "Choose the correct translation: cat", options: ["кошка", "окно", "книга", "машина"], correct: "кошка" },
+    ],
+    A1: [
+      { q: "I ___ coffee every morning.", options: ["drink", "drinks", "drinking", "drank"], correct: "drink" },
+      { q: "She ___ from Russia.", options: ["is", "are", "am", "be"], correct: "is" },
+    ],
+    A2: [
+      { q: "Yesterday we ___ to the cinema.", options: ["go", "went", "gone", "going"], correct: "went" },
+      { q: "I have lived here ___ 2020.", options: ["for", "since", "from", "during"], correct: "since" },
+    ],
+    B1: [
+      { q: "If I had more time, I ___ learn another language.", options: ["will", "would", "can", "am"], correct: "would" },
+      { q: "Text: Anna missed the bus, so she called a taxi. Why did Anna call a taxi?", options: ["She missed the bus", "She lost her phone", "She was hungry", "She bought a ticket"], correct: "She missed the bus", reading: true },
+    ],
+    B2: [
+      { q: "The report ___ by the manager yesterday.", options: ["was written", "wrote", "has write", "is wrote"], correct: "was written" },
+      { q: "She speaks English very fluently, ___?", options: ["does she", "doesn't she", "is she", "isn't it"], correct: "doesn't she" },
+    ],
+    C1: [
+      { q: "Despite ___ tired, he continued working.", options: ["being", "be", "was", "to be"], correct: "being" },
+      { q: "The proposal was rejected because it was not financially ___.", options: ["viable", "vivid", "various", "vacant"], correct: "viable" },
+    ],
+    C2: [
+      { q: "Had I known about the delay, I ___ earlier.", options: ["would leave", "would have left", "will leave", "left"], correct: "would have left" },
+      { q: "Text: The policy was criticised not for its ambition, but for its lack of practical implementation. What was the main criticism?", options: ["It was too ambitious", "It was not practical enough", "It was too short", "It was too cheap"], correct: "It was not practical enough", reading: true },
+    ],
+  } : {
+    A0: [
+      { q: "Ich ___ Anastasia.", options: ["bin", "bist", "ist", "sind"], correct: "bin" },
+      { q: "Was bedeutet: Haus?", options: ["дом", "книга", "вода", "улица"], correct: "дом" },
+    ],
+    A1: [
+      { q: "Das ist ___ Buch.", options: ["ein", "eine", "einen", "einem"], correct: "ein" },
+      { q: "Ich ___ aus Russland.", options: ["komme", "kommt", "kommen", "kommst"], correct: "komme" },
+    ],
+    A2: [
+      { q: "Gestern ___ ich Deutsch gelernt.", options: ["habe", "bin", "werde", "hat"], correct: "habe" },
+      { q: "Ich fahre ___ dem Bus.", options: ["mit", "für", "ohne", "durch"], correct: "mit" },
+    ],
+    B1: [
+      { q: "Wenn ich Zeit hätte, ___ ich mehr lesen.", options: ["werde", "würde", "wurde", "bin"], correct: "würde" },
+      { q: "Text: Anna hat den Bus verpasst. Deshalb nimmt sie ein Taxi. Warum nimmt Anna ein Taxi?", options: ["Sie hat den Bus verpasst", "Sie hat Hunger", "Sie kauft ein Buch", "Sie lernt Deutsch"], correct: "Sie hat den Bus verpasst", reading: true },
+    ],
+    B2: [
+      { q: "Der Brief ___ gestern geschrieben.", options: ["wurde", "hat", "ist", "war hat"], correct: "wurde" },
+      { q: "Ich freue mich ___ den Urlaub.", options: ["auf", "an", "bei", "mit"], correct: "auf" },
+    ],
+    C1: [
+      { q: "Obwohl er krank war, ___ er zur Arbeit.", options: ["ging", "gegangen", "geht", "gehen"], correct: "ging" },
+      { q: "Die Entscheidung wurde nach sorgfältiger Prüfung ___.", options: ["getroffen", "gemacht", "genommen", "gestellt"], correct: "getroffen" },
+    ],
+    C2: [
+      { q: "Hätte ich das gewusst, ___ ich anders reagiert.", options: ["hätte", "wäre", "würde haben", "hätte gehabt"], correct: "hätte" },
+      { q: "Text: Die Maßnahme wurde weniger wegen ihres Ziels kritisiert, sondern wegen der fehlenden praktischen Umsetzbarkeit. Was war das Hauptproblem?", options: ["Das Ziel war falsch", "Die Umsetzung war nicht praktikabel", "Die Maßnahme war zu billig", "Der Text war zu kurz"], correct: "Die Umsetzung war nicht praktikabel", reading: true },
+    ],
+  };
+
+  const getQuestion = (index, level) => {
+    const levelName = levels[level];
+    const list = questionBank[levelName];
+    return list[index % list.length];
+  };
+
+  const currentQuestion = getQuestion(currentIndex, levelIndex);
+  const totalQuestions = 10;
+
+  const answerQuestion = (option) => {
+    const correct = option === currentQuestion.correct;
+    const nextScore = score + (correct ? 1 : 0);
+    const nextHistory = [...history, { level: levels[levelIndex], question: currentQuestion.q, selected: option, correctAnswer: currentQuestion.correct, correct }];
+    setScore(nextScore);
+    setHistory(nextHistory);
+
+    if (currentIndex + 1 >= totalQuestions) {
+      setFinished(true);
+      return;
+    }
+
+    let nextLevel = levelIndex;
+    if (correct && levelIndex < levels.length - 1) nextLevel += 1;
+    if (!correct && levelIndex > 0) nextLevel -= 1;
+
+    setLevelIndex(nextLevel);
+    setCurrentIndex(currentIndex + 1);
+  };
+
+  const resultLevelIndex = Math.max(0, Math.min(levels.length - 1, Math.round((levelIndex + score / 2) / 2)));
+  const resultLevel = score <= 1 ? "A0" : score <= 3 ? levels[Math.min(2, resultLevelIndex)] : levels[Math.max(resultLevelIndex, 2)];
+
+  const levelText = {
+    A0: "Начальный уровень: можно начинать с самых основ.",
+    A1: "Базовый уровень: вы понимаете простые фразы и можете строить короткие предложения.",
+    A2: "Элементарный уровень: вы уже знаете базовую грамматику и лексику, но нужна практика.",
+    B1: "Средний уровень: вы можете общаться на знакомые темы, но ещё есть пробелы.",
+    B2: "Уверенный средний уровень: можно развивать беглость, точность и сложную лексику.",
+    C1: "Продвинутый уровень: стоит работать над нюансами, стилем и свободной речью.",
+    C2: "Очень высокий уровень: можно совершенствовать точность, академический или профессиональный язык.",
+  };
+
+  const resetTest = () => {
+    setStarted(false);
+    setCurrentIndex(0);
+    setScore(0);
+    setLevelIndex(0);
+    setHistory([]);
+    setFinished(false);
+  };
+
+  if (!started) {
+    return (
+      <div className="rounded-[2rem] bg-white p-6 text-center shadow-xl shadow-slate-200/70 ring-1 ring-slate-100 sm:p-10">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500 to-violet-600 text-3xl text-white">🎯</div>
+        <h3 className="text-3xl font-black text-slate-950">Готовы пройти тест?</h3>
+        <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-600">
+          Тест начнётся с простых вопросов и будет автоматически менять сложность: если ответ правильный, следующий вопрос станет сложнее; если ответ неправильный, вопрос станет легче. В тесте есть задание на понимание текста.
+        </p>
+        <button
+          type="button"
+          onClick={() => setStarted(true)}
+          className="mt-7 rounded-2xl bg-gradient-to-r from-orange-400 to-yellow-400 px-8 py-4 font-black text-slate-950 shadow-lg shadow-orange-300/30 transition hover:from-orange-500 hover:to-yellow-500"
+        >
+          Начать тест
+        </button>
+      </div>
+    );
+  }
+
+  if (finished) {
+    return (
+      <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100 sm:p-8">
+        <div className="rounded-[1.75rem] bg-slate-950 p-6 text-white">
+          <div className="text-sm font-bold text-white/70">Ваш примерный уровень</div>
+          <div className="mt-2 text-6xl font-black">{resultLevel}</div>
+          <p className="mt-4 text-lg leading-8 text-white/80">{levelText[resultLevel]}</p>
+          <div className="mt-4 rounded-2xl bg-white/10 p-4 font-bold">Правильных ответов: {score} из {totalQuestions}</div>
+        </div>
+        <div className="mt-6 grid gap-3">
+          {history.map((item, index) => (
+            <div key={index} className={`rounded-2xl p-4 text-sm font-bold ring-1 ${item.correct ? "bg-emerald-50 text-emerald-800 ring-emerald-100" : "bg-red-50 text-red-700 ring-red-100"}`}>
+              {index + 1}. Уровень вопроса: {item.level} • {item.correct ? "правильно" : `неправильно, правильный ответ: ${item.correctAnswer}`}
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={resetTest} className="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-black text-white">Пройти ещё раз</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[2rem] bg-white p-5 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100 sm:p-8">
+      <div className="mb-6 flex flex-col justify-between gap-4 rounded-3xl bg-gradient-to-br from-cyan-50 via-white to-yellow-50 p-5 ring-1 ring-cyan-100 sm:flex-row sm:items-center">
+        <div>
+          <div className="mb-2 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Вопрос {currentIndex + 1} из {totalQuestions}</div>
+          <h3 className="text-2xl font-black text-slate-950">Текущая сложность: {levels[levelIndex]}</h3>
+        </div>
+        <div className="rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm">Баллы: {score}</div>
+      </div>
+
+      <div className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+        {currentQuestion.reading && <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-black text-violet-800">Textverständnis</div>}
+        <div className="mb-5 text-xl font-black leading-8 text-slate-950">{currentQuestion.q}</div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {currentQuestion.options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => answerQuestion(option)}
+              className="rounded-2xl bg-white p-4 text-left font-bold text-slate-700 ring-1 ring-slate-100 transition hover:bg-cyan-50 hover:text-cyan-800"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LanguagePage({ type, onHome }) {
   const data = site[type];
   const [mobileOpen, setMobileOpen] = useState(false);
-  const nav = [["Обо мне", "#about"], ["Программа", "#program"], ["Формат", "#format"], ["Стоимость", "#pricing"], ["FAQ", "#faq"], ["Контакты", "#contact"]];
+  const nav = [["Обо мне", "#about"], ["Программа", "#program"], ["Формат", "#format"], ["Тест уровня", "#level-test"], ["Стоимость", "#pricing"], ["FAQ", "#faq"], ["Контакты", "#contact"]];
 
   return (
     <div className="min-h-screen scroll-smooth bg-[#f7fbff] text-slate-900">
@@ -574,6 +765,13 @@ function LanguagePage({ type, onHome }) {
 
         <section id="format" className="bg-white px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl"><SectionHeader eyebrow="Формат занятий" title="Онлайн-уроки, которые удобно встроить в ваш график" text="Все занятия проходят онлайн в MTS Link. Для интерактивных материалов, схем, упражнений и совместной работы используется Miro." /><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">{[["video", "Онлайн-занятия"], ["heart", "Индивидуальные уроки"], ["clock", "60 минут"], ["star", "Бесплатный пробный урок"], ["pen", "Домашние задания по необходимости"], ["book", "Все материалы предоставляются"], ["globe", "MTS Link и Miro"], ["sparkle", "Гибкое расписание"]].map(([icon, title]) => <div key={title} className="rounded-[1.5rem] bg-slate-50 p-5 shadow-sm ring-1 ring-slate-100"><IconBubble name={icon} /><h3 className="mt-4 font-black">{title}</h3></div>)}</div></div>
+        </section>
+
+        <section id="level-test" className="px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl">
+            <SectionHeader eyebrow="Тест уровня" title="Какой у вас уровень языка?" text="Короткий онлайн-тест поможет примерно определить уровень перед пробным занятием." />
+            <LevelTest type={type} />
+          </div>
         </section>
 
         <section className="px-4 py-20 sm:px-6 lg:px-8">
