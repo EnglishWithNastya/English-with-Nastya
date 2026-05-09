@@ -62,48 +62,101 @@ const students = Object.keys(accounts).filter((name) => name !== adminUsername);
 const germanStudents = ["Sonja", "Vanja"];
 
 const lessonSchedule = {
-  Max: ["Суббота, 20:30–21:30"],
-  Masha: ["Четверг, 19:30–20:30", "Суббота, 11:00–12:00"],
-  Polina: ["Понедельник, 15:00–16:00", "Вторник, 15:00–16:00", "Среда, 17:00–18:00", "Четверг, 17:00–18:00", "Пятница, 15:00–16:00", "Суббота, 15:00–16:00"],
-  Igor: ["Среда, 16:00–17:00", "Суббота, 12:00–13:00"],
-  Sonja: ["Среда, 12:00–13:00 — немецкий", "Суббота, 13:00–14:00 — немецкий"],
-  Vanja: ["Понедельник, 19:30–20:30 — немецкий", "Четверг, 20:30–21:30 — немецкий"],
-  Katya: ["Индивидуальное расписание будет добавлено позже"],
-  Amelia: ["Индивидуальное расписание будет добавлено позже"],
-  Denis: ["Понедельник, 18:00–19:00", "Среда, 18:00–19:00", "Пятница, 18:00–19:00"],
+  Max: ["Saturday, 20:30–21:30"],
+  Masha: ["Thursday, 19:30–20:30", "Saturday, 11:00–12:00"],
+  Polina: ["Monday, 15:00–16:00", "Tuesday, 15:00–16:00", "Wednesday, 17:00–18:00", "Thursday, 17:00–18:00", "Friday, 15:00–16:00", "Saturday, 15:00–16:00"],
+  Igor: ["Wednesday, 16:00–17:00", "Saturday, 12:00–13:00"],
+  Sonja: ["Wednesday, 12:00–13:00", "Saturday, 13:00–14:00"],
+  Vanja: ["Monday, 19:30–20:30", "Thursday, 20:30–21:30"],
+  Katya: [],
+  Amelia: [],
+  Denis: ["Monday, 18:00–19:00", "Wednesday, 18:00–19:00", "Friday, 18:00–19:00"],
+};
+
+const hourlyRates = {
+  Max: 1000,
+  Vanja: 800,
+  Amelia: 1200,
+  Masha: 1000,
+  Igor: 1000,
+  Sonja: 500,
+  Polina: 800,
+  Denis: 1000,
 };
 
 const scheduleByDay = [
-  ["Понедельник", ["15:00–16:00 — Polina", "18:00–19:00 — Denis", "19:30–20:30 — Vanja · Deutsch"]],
-  ["Вторник", ["15:00–16:00 — Polina"]],
-  ["Среда", ["12:00–13:00 — Sonja · Deutsch", "16:00–17:00 — Igor", "17:00–18:00 — Polina", "18:00–19:00 — Denis"]],
-  ["Четверг", ["17:00–18:00 — Polina", "19:30–20:30 — Masha", "20:30–21:30 — Vanja · Deutsch"]],
-  ["Пятница", ["15:00–16:00 — Polina", "18:00–19:00 — Denis"]],
-  ["Суббота", ["11:00–12:00 — Masha", "12:00–13:00 — Igor", "13:00–14:00 — Sonja · Deutsch", "15:00–16:00 — Polina", "20:30–21:30 — Max"]],
+  ["Monday", ["15:00–16:00 — Polina", "18:00–19:00 — Denis", "19:30–20:30 — Vanja"]],
+  ["Tuesday", ["15:00–16:00 — Polina"]],
+  ["Wednesday", ["12:00–13:00 — Sonja", "16:00–17:00 — Igor", "17:00–18:00 — Polina", "18:00–19:00 — Denis"]],
+  ["Thursday", ["17:00–18:00 — Polina", "19:30–20:30 — Masha", "20:30–21:30 — Vanja"]],
+  ["Friday", ["15:00–16:00 — Polina", "18:00–19:00 — Denis"]],
+  ["Saturday", ["11:00–12:00 — Masha", "12:00–13:00 — Igor", "13:00–14:00 — Sonja", "15:00–16:00 — Polina", "20:30–21:30 — Max"]],
 ];
 
-const weeklyWords = {
-  en: [
-    { word: "breakfast", answer: "завтрак", options: ["завтрак", "поезд", "тетрадь", "окно"], example: "I usually have breakfast at 8 o'clock." },
-    { word: "umbrella", answer: "зонт", options: ["ключ", "зонт", "сумка", "вода"], example: "Take an umbrella. It is raining." },
-    { word: "homework", answer: "домашнее задание", options: ["покупка", "домашнее задание", "звонок", "погода"], example: "I finished my homework in the evening." },
-    { word: "wallet", answer: "кошелёк", options: ["кошелёк", "зеркало", "ручка", "стул"], example: "I left my wallet at home." },
-    { word: "appointment", answer: "встреча / запись", options: ["встреча / запись", "завтрак", "рубашка", "улица"], example: "I have a doctor's appointment tomorrow." },
-    { word: "neighbour", answer: "сосед", options: ["врач", "сосед", "учитель", "водитель"], example: "Our neighbour is very friendly." },
-    { word: "receipt", answer: "чек", options: ["чек", "карта", "дверь", "чай"], example: "Please keep the receipt." },
-    { word: "schedule", answer: "расписание", options: ["расписание", "ошибка", "молоко", "письмо"], example: "My schedule is very busy this week." },
-  ],
-  de: [
-    { word: "das Frühstück", answer: "завтрак", options: ["завтрак", "поезд", "тетрадь", "окно"], example: "Ich esse Frühstück um 8 Uhr." },
-    { word: "der Regenschirm", answer: "зонт", options: ["ключ", "зонт", "сумка", "вода"], example: "Ich nehme einen Regenschirm mit." },
-    { word: "die Hausaufgabe", answer: "домашнее задание", options: ["покупка", "домашнее задание", "звонок", "погода"], example: "Ich mache meine Hausaufgabe." },
-    { word: "die Geldbörse", answer: "кошелёк", options: ["кошелёк", "зеркало", "ручка", "стул"], example: "Meine Geldbörse ist in der Tasche." },
-    { word: "der Termin", answer: "встреча / запись", options: ["встреча / запись", "завтрак", "рубашка", "улица"], example: "Ich habe morgen einen Termin." },
-    { word: "der Nachbar", answer: "сосед", options: ["врач", "сосед", "учитель", "водитель"], example: "Der Nachbar ist nett." },
-    { word: "die Quittung", answer: "чек", options: ["чек", "карта", "дверь", "чай"], example: "Ich brauche die Quittung." },
-    { word: "der Stundenplan", answer: "расписание", options: ["расписание", "ошибка", "молоко", "письмо"], example: "Mein Stundenplan ist voll." },
-  ],
+const dailyWords = {
+  en: {
+    A0: [
+      { word: "water", answer: "вода", options: ["вода", "стол", "день", "окно"], example: "I drink water every day." },
+      { word: "book", answer: "книга", options: ["книга", "дверь", "сумка", "утро"], example: "This book is interesting." },
+    ],
+    A1: [
+      { word: "breakfast", answer: "завтрак", options: ["завтрак", "поезд", "тетрадь", "окно"], example: "I usually have breakfast at 8 o'clock." },
+      { word: "umbrella", answer: "зонт", options: ["ключ", "зонт", "сумка", "вода"], example: "Take an umbrella. It is raining." },
+    ],
+    A2: [
+      { word: "homework", answer: "домашнее задание", options: ["покупка", "домашнее задание", "звонок", "погода"], example: "I finished my homework in the evening." },
+      { word: "wallet", answer: "кошелёк", options: ["кошелёк", "зеркало", "ручка", "стул"], example: "I left my wallet at home." },
+    ],
+    B1: [
+      { word: "appointment", answer: "встреча / запись", options: ["встреча / запись", "завтрак", "рубашка", "улица"], example: "I have a doctor's appointment tomorrow." },
+      { word: "neighbour", answer: "сосед", options: ["врач", "сосед", "учитель", "водитель"], example: "Our neighbour is very friendly." },
+    ],
+    B2: [
+      { word: "receipt", answer: "чек", options: ["чек", "карта", "дверь", "чай"], example: "Please keep the receipt." },
+      { word: "schedule", answer: "расписание", options: ["расписание", "ошибка", "молоко", "письмо"], example: "My schedule is very busy this week." },
+    ],
+    C1: [
+      { word: "commute", answer: "дорога на работу / учёбу", options: ["дорога на работу / учёбу", "подарок", "стакан", "праздник"], example: "My commute takes forty minutes." },
+      { word: "errand", answer: "поручение / бытовое дело", options: ["поручение / бытовое дело", "перчатка", "здание", "сосиска"], example: "I need to run an errand after work." },
+    ],
+    C2: [
+      { word: "leftovers", answer: "остатки еды", options: ["остатки еды", "квитанция", "навык", "расписание"], example: "We had leftovers for dinner." },
+      { word: "household chores", answer: "домашние обязанности", options: ["домашние обязанности", "приглашение", "соседство", "сдача"], example: "Household chores are easier when everyone helps." },
+    ],
+  },
+  de: {
+    A0: [
+      { word: "das Wasser", answer: "вода", options: ["вода", "стол", "день", "окно"], example: "Ich trinke Wasser." },
+      { word: "das Buch", answer: "книга", options: ["книга", "дверь", "сумка", "утро"], example: "Das Buch ist interessant." },
+    ],
+    A1: [
+      { word: "das Frühstück", answer: "завтрак", options: ["завтрак", "поезд", "тетрадь", "окно"], example: "Ich esse Frühstück um 8 Uhr." },
+      { word: "der Regenschirm", answer: "зонт", options: ["ключ", "зонт", "сумка", "вода"], example: "Ich nehme einen Regenschirm mit." },
+    ],
+    A2: [
+      { word: "die Hausaufgabe", answer: "домашнее задание", options: ["покупка", "домашнее задание", "звонок", "погода"], example: "Ich mache meine Hausaufgabe." },
+      { word: "die Geldbörse", answer: "кошелёк", options: ["кошелёк", "зеркало", "ручка", "стул"], example: "Meine Geldbörse ist in der Tasche." },
+    ],
+    B1: [
+      { word: "der Termin", answer: "встреча / запись", options: ["встреча / запись", "завтрак", "рубашка", "улица"], example: "Ich habe morgen einen Termin." },
+      { word: "der Nachbar", answer: "сосед", options: ["врач", "сосед", "учитель", "водитель"], example: "Der Nachbar ist nett." },
+    ],
+    B2: [
+      { word: "die Quittung", answer: "чек", options: ["чек", "карта", "дверь", "чай"], example: "Ich brauche die Quittung." },
+      { word: "der Stundenplan", answer: "расписание", options: ["расписание", "ошибка", "молоко", "письмо"], example: "Mein Stundenplan ist voll." },
+    ],
+    C1: [
+      { word: "der Arbeitsweg", answer: "дорога на работу / учёбу", options: ["дорога на работу / учёбу", "подарок", "стакан", "праздник"], example: "Mein Arbeitsweg dauert vierzig Minuten." },
+      { word: "die Besorgung", answer: "поручение / бытовое дело", options: ["поручение / бытовое дело", "перчатка", "здание", "сосиска"], example: "Ich muss noch eine Besorgung machen." },
+    ],
+    C2: [
+      { word: "die Essensreste", answer: "остатки еды", options: ["остатки еды", "квитанция", "навык", "расписание"], example: "Wir essen heute die Essensreste." },
+      { word: "die Hausarbeit", answer: "домашние обязанности", options: ["домашние обязанности", "приглашение", "соседство", "сдача"], example: "Hausarbeit gehört zum Alltag." },
+    ],
+  },
 };
+
+const wordLevels = ["A0", "A1", "A2", "B1", "B2", "C1", "C2"];
 
 const site = {
   en: {
@@ -202,21 +255,26 @@ const faq = [
   ["Как отменить или перенести занятие?", "Лучше предупредить заранее. Детальные правила переноса можно согласовать индивидуально."],
 ];
 
-function getMondayKey(date = new Date()) {
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
-  return monday.toISOString().slice(0, 10);
+function getTodayKey(date = new Date()) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString().slice(0, 10);
 }
 
-function getWeeklyQuiz(studentName) {
+function getStudentWordLevel(studentName) {
+  return safeGet(`word-level-${studentName}`, "A0");
+}
+
+function getDailyQuiz(studentName) {
   const language = germanStudents.includes(studentName) ? "de" : "en";
-  const list = weeklyWords[language];
-  const start = new Date("2026-01-05T00:00:00");
-  const monday = new Date(`${getMondayKey()}T00:00:00`);
-  const weekIndex = Math.max(0, Math.floor((monday - start) / (7 * 24 * 60 * 60 * 1000)));
-  return { ...list[weekIndex % list.length], language, id: `${studentName}-${language}-${getMondayKey()}` };
+  const level = getStudentWordLevel(studentName);
+  const list = dailyWords[language][level] || dailyWords[language].A0;
+  const start = new Date("2026-01-01T00:00:00");
+  const today = new Date(`${getTodayKey()}T00:00:00`);
+  const dayIndex = Math.max(0, Math.floor((today - start) / (24 * 60 * 60 * 1000)));
+  return { ...list[dayIndex % list.length], language, level, id: `${studentName}-${language}-${level}-${getTodayKey()}` };
+}
+
+function getWordStats(studentName) {
+  return safeGet(`word-stats-${studentName}`, { correct: 0, wrong: 0, unanswered: 0, streak: 0, level: "A0" });
 }
 
 function safeGet(key, fallback) {
@@ -289,7 +347,7 @@ function Home({ onChoose }) {
         <motion.div variants={fadeUp} className="mt-10 grid w-full gap-6 lg:grid-cols-3">
           <HomeChoice title="Английский язык" icon="EN" text="Лексика, грамматика, разговорная практика, школа, учёба, работа и путешествия." chip="Открыть страницу английского" onClick={() => onChoose("en")} color="from-cyan-500 to-blue-600" />
           <HomeChoice title="Немецкий язык" icon="DE" text="Артикли, падежи, порядок слов, произношение и разговорная практика." chip="Открыть страницу немецкого" onClick={() => onChoose("de")} color="from-orange-400 to-violet-600" />
-          <HomeChoice title="Я уже ученик" icon="👤" text="Войдите в свой профиль: уроки, домашние задания, слово недели, баллы и расписание." chip="Войти в личный кабинет" onClick={() => onChoose("students")} color="from-slate-900 to-violet-600" />
+          <HomeChoice title="Я уже ученик" icon="👤" text="Войдите в свой профиль: уроки, домашние задания, слово дня, баллы и расписание." chip="Войти в личный кабинет" onClick={() => onChoose("students")} color="from-slate-900 to-violet-600" />
         </motion.div>
         <motion.div variants={fadeUp} className="mt-8 grid gap-3 text-sm font-semibold text-slate-500 sm:grid-cols-3">
           <span>Первый пробный урок бесплатно</span>
@@ -330,7 +388,7 @@ function StudentPortal({ onBack }) {
   const [error, setError] = useState("");
   const [quizState, setQuizState] = useState(null);
 
-  const quiz = student && student !== adminUsername ? getWeeklyQuiz(student) : null;
+  const quiz = student && student !== adminUsername ? getDailyQuiz(student) : null;
   const totalPoints = student ? safeGet(`points-${student}`, 0) : 0;
   const isAdmin = student === adminUsername;
   const language = student && (isAdmin ? "Admin" : germanStudents.includes(student) ? "Deutsch" : "English");
@@ -340,7 +398,7 @@ function StudentPortal({ onBack }) {
     if (accounts[cleanName] && accounts[cleanName] === password) {
       setStudent(cleanName);
       setView(cleanName === adminUsername ? "admin" : "dashboard");
-      setQuizState(cleanName === adminUsername ? null : safeGet(`weekly-word-${getWeeklyQuiz(cleanName).id}`, { answered: false, correct: false, points: 0, selected: null }));
+      setQuizState(cleanName === adminUsername ? null : safeGet(`daily-word-${getDailyQuiz(cleanName).id}`, { answered: false, correct: false, points: 0, selected: null }));
       setError("");
       setPassword("");
     } else {
@@ -361,7 +419,30 @@ function StudentPortal({ onBack }) {
     if (!student || !quiz || quizState?.answered) return;
     const correct = option === quiz.answer;
     const nextState = { answered: true, correct, points: correct ? 10 : 0, selected: option };
-    safeSet(`weekly-word-${quiz.id}`, nextState);
+
+    const currentStats = getWordStats(student);
+    const currentLevel = currentStats.level || getStudentWordLevel(student);
+    const currentLevelIndex = Math.max(0, wordLevels.indexOf(currentLevel));
+    let nextLevelIndex = currentLevelIndex;
+    const nextStats = {
+      ...currentStats,
+      correct: currentStats.correct + (correct ? 1 : 0),
+      wrong: currentStats.wrong + (correct ? 0 : 1),
+      streak: correct ? currentStats.streak + 1 : 0,
+    };
+
+    if (correct && nextStats.streak >= 3) {
+      nextLevelIndex = Math.min(wordLevels.length - 1, currentLevelIndex + 1);
+      nextStats.streak = 0;
+    }
+    if (!correct) {
+      nextLevelIndex = Math.max(0, currentLevelIndex - 1);
+    }
+
+    nextStats.level = wordLevels[nextLevelIndex];
+    safeSet(`daily-word-${quiz.id}`, nextState);
+    safeSet(`word-stats-${student}`, nextStats);
+    safeSet(`word-level-${student}`, nextStats.level);
     if (correct) safeSet(`points-${student}`, totalPoints + 10);
     setQuizState(nextState);
   };
@@ -416,10 +497,12 @@ function AdminPortal({ onBack, logout }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [attendance, setAttendance] = useState(safeGet("attendance-records", {}));
 
+  const actualLessons = (name) => (lessonSchedule[name] || []).filter((lesson) => lesson && !lesson.toLowerCase().includes("schedule will be added"));
+
   const allLessonRows = useMemo(() => {
     const rows = [];
-    Object.entries(lessonSchedule).forEach(([name, lessons]) => {
-      lessons.forEach((lesson) => rows.push({ student: name, lesson }));
+    students.forEach((name) => {
+      actualLessons(name).forEach((lesson) => rows.push({ student: name, lesson }));
     });
     return rows;
   }, []);
@@ -432,7 +515,7 @@ function AdminPortal({ onBack, logout }) {
   };
 
   const attendanceStats = (studentName) => {
-    const lessons = lessonSchedule[studentName] || [];
+    const lessons = actualLessons(studentName);
     const values = lessons.map((lesson) => attendance[`${studentName}__${lesson}`]).filter(Boolean);
     return {
       total: lessons.length,
@@ -443,24 +526,51 @@ function AdminPortal({ onBack, logout }) {
     };
   };
 
+  const earnedThisWeek = students.reduce((sum, name) => {
+    const stats = attendanceStats(name);
+    return sum + stats.came * (hourlyRates[name] || 0);
+  }, 0);
+
+  const plannedWeeklyRevenue = students.reduce((sum, name) => {
+    return sum + actualLessons(name).length * (hourlyRates[name] || 0);
+  }, 0);
+
+  const movedPotential = students.reduce((sum, name) => {
+    const stats = attendanceStats(name);
+    return sum + stats.moved * (hourlyRates[name] || 0);
+  }, 0);
+
+  const missedLoss = students.reduce((sum, name) => {
+    const stats = attendanceStats(name);
+    return sum + stats.missed * (hourlyRates[name] || 0);
+  }, 0);
+
   if (selectedStudent) {
-    const quiz = getWeeklyQuiz(selectedStudent);
-    const quizState = safeGet(`weekly-word-${quiz.id}`, { answered: false, correct: false, points: 0, selected: null });
+    const quiz = getDailyQuiz(selectedStudent);
+    const quizState = safeGet(`daily-word-${quiz.id}`, { answered: false, correct: false, points: 0, selected: null });
     const totalPoints = safeGet(`points-${selectedStudent}`, 0);
+    const stats = attendanceStats(selectedStudent);
     return (
       <div className="min-h-screen bg-[#f7fbff] px-4 py-8 sm:px-6 lg:px-8">
         <BackgroundBlobs />
         <div className="mx-auto max-w-7xl">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Adminansicht • Schülerprofil</div>
-              <h1 className="mt-3 text-4xl font-black text-slate-950">Profil von {selectedStudent}</h1>
-              <p className="mt-2 leading-7 text-slate-600">Anastasia sieht hier dieselben Bereiche wie der Schüler — plus organisatorische Admin-Informationen.</p>
+              <div className="inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Админ-просмотр • профиль ученика</div>
+              <h1 className="mt-3 text-4xl font-black text-slate-950">Профиль ученика: {selectedStudent}</h1>
+              <p className="mt-2 leading-7 text-slate-600">Anastasia видит здесь те же разделы, которые доступны ученику, а также организационную информацию.</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button onClick={() => setSelectedStudent(null)} className="rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← Zur Adminübersicht</button>
+              <button onClick={() => setSelectedStudent(null)} className="rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← К админ-панели</button>
               <button onClick={logout} className="rounded-2xl bg-slate-950 px-4 py-3 font-black text-white shadow-sm">Выйти</button>
             </div>
+          </div>
+
+          <div className="mb-6 grid gap-4 md:grid-cols-4">
+            <Card className="p-5"><div className="text-2xl">📅</div><div className="mt-2 text-sm font-bold text-slate-500">Занятий в неделю</div><div className="text-3xl font-black">{stats.total}</div></Card>
+            <Card className="p-5"><div className="text-2xl">✅</div><div className="mt-2 text-sm font-bold text-slate-500">Пришёл</div><div className="text-3xl font-black">{stats.came}</div></Card>
+            <Card className="p-5"><div className="text-2xl">↔️</div><div className="mt-2 text-sm font-bold text-slate-500">Перенос</div><div className="text-3xl font-black">{stats.moved}</div></Card>
+            <Card className="p-5"><div className="text-2xl">❌</div><div className="mt-2 text-sm font-bold text-slate-500">Не пришёл</div><div className="text-3xl font-black">{stats.missed}</div></Card>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
@@ -485,9 +595,9 @@ function AdminPortal({ onBack, logout }) {
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Adminaccount • Anastasia</div>
+            <div className="inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Админ-аккаунт • Anastasia</div>
             <h1 className="mt-3 text-4xl font-black text-slate-950">Панель преподавателя</h1>
-            <p className="mt-2 max-w-3xl leading-7 text-slate-600">Anastasia kann Schülerprofile öffnen, Anwesenheit dokumentieren und sehen, wie oft Stunden ausfallen oder verschoben werden.</p>
+            <p className="mt-2 max-w-3xl leading-7 text-slate-600">Здесь можно открывать профили учеников, отмечать посещаемость и рассчитывать доход на основе календаря посещаемости.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button onClick={onBack} className="rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← На главную</button>
@@ -495,8 +605,8 @@ function AdminPortal({ onBack, logout }) {
           </div>
         </div>
 
-        <div className="mb-6 grid gap-3 md:grid-cols-3">
-          {[["overview", "Ученики", "👥"], ["calendar", "Календарь посещаемости", "📅"], ["stats", "Статистика", "📊"]].map(([id, label, icon]) => (
+        <div className="mb-6 grid gap-3 md:grid-cols-4">
+          {[["overview", "Ученики", "👥"], ["calendar", "Календарь посещаемости", "📅"], ["revenue", "Доход", "₽"], ["stats", "Статистика", "📊"]].map(([id, label, icon]) => (
             <button key={id} onClick={() => setAdminView(id)} className={`rounded-2xl p-4 text-left font-black shadow-sm ring-1 transition ${adminView === id ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{icon} {label}</button>
           ))}
         </div>
@@ -504,28 +614,25 @@ function AdminPortal({ onBack, logout }) {
         {adminView === "overview" && (
           <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
             <Card className="p-6">
-              <h2 className="text-3xl font-black">Alle Schülerprofile</h2>
-              <p className="mt-2 leading-7 text-slate-600">Klicken Sie auf einen Schüler, um sein komplettes Profil zu öffnen.</p>
+              <h2 className="text-3xl font-black">Профили учеников</h2>
+              <p className="mt-2 leading-7 text-slate-600">Нажмите на ученика, чтобы открыть его полный профиль.</p>
               <div className="mt-6 grid gap-4">
                 {students.map((name) => {
                   const lang = germanStudents.includes(name) ? "Deutsch" : "English";
                   const points = safeGet(`points-${name}`, 0);
+                  const wordStats = getWordStats(name);
+                  const todayQuiz = getDailyQuiz(name);
+                  const todayState = safeGet(`daily-word-${todayQuiz.id}`, { answered: false });
+                  const unansweredToday = todayState.answered ? 0 : 1;
                   const stats = attendanceStats(name);
                   return (
                     <button key={name} onClick={() => setSelectedStudent(name)} className="rounded-3xl bg-slate-50 p-5 text-left ring-1 ring-slate-100 transition hover:-translate-y-1 hover:bg-cyan-50">
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <h3 className="text-2xl font-black">{name}</h3>
-                          <p className="text-sm font-bold text-slate-500">{lang} • Punkte: {points}</p>
-                        </div>
-                        <div className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Profil öffnen</div>
+                        <div><h3 className="text-2xl font-black">{name}</h3><p className="text-sm font-bold text-slate-500">{lang} • баллы: {points} • ставка: {hourlyRates[name] || 0} ₽</p></div>
+                        <div className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Открыть профиль</div>
                       </div>
-                      <div className="mt-4 grid gap-2 text-sm font-bold text-slate-600 sm:grid-cols-4">
-                        <span>Kam: {stats.came}</span>
-                        <span>Nicht gekommen: {stats.missed}</span>
-                        <span>Verschoben: {stats.moved}</span>
-                        <span>Offen: {stats.open}</span>
-                      </div>
+                      <div className="mt-4 grid gap-2 text-sm font-bold text-slate-600 sm:grid-cols-4"><span>Пришёл: {stats.came}</span><span>Не пришёл: {stats.missed}</span><span>Перенос: {stats.moved}</span><span>Открыто: {stats.open}</span></div>
+                      <div className="mt-3 grid gap-2 text-sm font-bold text-slate-600 sm:grid-cols-4"><span>Слова правильно: {wordStats.correct}</span><span>Слова неправильно: {wordStats.wrong}</span><span>Сегодня не отвечено: {unansweredToday}</span><span>Уровень слов: {wordStats.level || "A0"}</span></div>
                     </button>
                   );
                 })}
@@ -533,18 +640,9 @@ function AdminPortal({ onBack, logout }) {
             </Card>
 
             <Card className="p-6">
-              <h2 className="text-3xl font-black">Allgemeiner Wochenplan</h2>
-              <p className="mt-2 leading-7 text-slate-600">Dieser Gesamtplan ist nur im Adminaccount sichtbar.</p>
-              <div className="mt-6 grid gap-4">
-                {scheduleByDay.map(([day, lessons]) => (
-                  <div key={day} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
-                    <h3 className="font-black text-slate-950">{day}</h3>
-                    <div className="mt-3 grid gap-2">
-                      {lessons.map((lesson) => <div key={lesson} className="rounded-2xl bg-white p-3 text-sm font-bold text-slate-700">{lesson}</div>)}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h2 className="text-3xl font-black">Общий недельный план</h2>
+              <p className="mt-2 leading-7 text-slate-600">Этот общий план виден только в админ-аккаунте.</p>
+              <div className="mt-6 grid gap-4">{scheduleByDay.map(([day, lessons]) => <div key={day} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100"><h3 className="font-black text-slate-950">{day}</h3><div className="mt-3 grid gap-2">{lessons.map((lesson) => <div key={lesson} className="rounded-2xl bg-white p-3 text-sm font-bold text-slate-700">{lesson}</div>)}</div></div>)}</div>
             </Card>
           </div>
         )}
@@ -552,7 +650,7 @@ function AdminPortal({ onBack, logout }) {
         {adminView === "calendar" && (
           <Card className="p-6">
             <h2 className="text-3xl font-black">Календарь посещаемости</h2>
-            <p className="mt-2 leading-7 text-slate-600">Markieren Sie für jede Stunde, ob der Schüler gekommen ist, nicht gekommen ist oder die Stunde verschoben wurde.</p>
+            <p className="mt-2 leading-7 text-slate-600">Отметьте для каждого занятия: ученик пришёл, не пришёл, перенёс занятие или статус пока открыт.</p>
             <div className="mt-6 grid gap-4">
               {allLessonRows.map(({ student: studentName, lesson }) => {
                 const key = `${studentName}__${lesson}`;
@@ -560,17 +658,10 @@ function AdminPortal({ onBack, logout }) {
                 return (
                   <div key={key} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <h3 className="text-xl font-black">{studentName}</h3>
-                        <p className="font-bold text-slate-600">{lesson}</p>
-                      </div>
-                      <div className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm">Status: {status === "came" ? "gekommen" : status === "missed" ? "nicht gekommen" : status === "moved" ? "verschoben" : "offen"}</div>
+                      <div><h3 className="text-xl font-black">{studentName}</h3><p className="font-bold text-slate-600">{lesson}</p><p className="text-sm font-bold text-slate-500">Ставка: {hourlyRates[studentName] || 0} ₽</p></div>
+                      <div className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm">Статус: {status === "came" ? "пришёл" : status === "missed" ? "не пришёл" : status === "moved" ? "перенос" : "открыто"}</div>
                     </div>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-4">
-                      {[["came", "Gekommen"], ["missed", "Nicht gekommen"], ["moved", "Verschoben"], ["open", "Offen"]].map(([id, label]) => (
-                        <button key={id} onClick={() => setAttendanceStatus(studentName, lesson, id)} className={`rounded-2xl px-4 py-3 font-black ring-1 transition ${status === id ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{label}</button>
-                      ))}
-                    </div>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-4">{[["came", "Пришёл"], ["missed", "Не пришёл"], ["moved", "Перенос"], ["open", "Открыто"]].map(([id, label]) => <button key={id} onClick={() => setAttendanceStatus(studentName, lesson, id)} className={`rounded-2xl px-4 py-3 font-black ring-1 transition ${status === id ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{label}</button>)}</div>
                   </div>
                 );
               })}
@@ -578,26 +669,60 @@ function AdminPortal({ onBack, logout }) {
           </Card>
         )}
 
+        {adminView === "revenue" && (
+          <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+            <Card className="p-6">
+              <h2 className="text-3xl font-black">Калькулятор дохода</h2>
+              <p className="mt-2 leading-7 text-slate-600">Расчёт основан на календаре посещаемости. В доход засчитываются только занятия со статусом «Пришёл».</p>
+              <div className="mt-6 grid gap-4">
+                <div className="rounded-3xl bg-emerald-50 p-5 ring-1 ring-emerald-100"><div className="text-sm font-bold text-emerald-700">Доход по отмеченным посещениям</div><div className="mt-2 text-4xl font-black text-emerald-900">{earnedThisWeek} ₽</div></div>
+                <div className="rounded-3xl bg-cyan-50 p-5 ring-1 ring-cyan-100"><div className="text-sm font-bold text-cyan-700">Плановый доход за неделю</div><div className="mt-2 text-4xl font-black text-cyan-900">{plannedWeeklyRevenue} ₽</div></div>
+                <div className="rounded-3xl bg-yellow-50 p-5 ring-1 ring-yellow-100"><div className="text-sm font-bold text-orange-700">Потенциально перенесено</div><div className="mt-2 text-4xl font-black text-orange-900">{movedPotential} ₽</div></div>
+                <div className="rounded-3xl bg-red-50 p-5 ring-1 ring-red-100"><div className="text-sm font-bold text-red-700">Не получено из-за пропусков</div><div className="mt-2 text-4xl font-black text-red-900">{missedLoss} ₽</div></div>
+                <div className="rounded-3xl bg-slate-950 p-5 text-white"><div className="text-sm font-bold text-white/70">Прогноз на месяц по текущим отмеченным посещениям</div><div className="mt-2 text-4xl font-black">{earnedThisWeek * 4} ₽</div><p className="mt-2 text-sm text-white/60">Расчёт: отмеченный доход × 4 недели.</p></div>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h2 className="text-3xl font-black">Доход по ученикам</h2>
+              <div className="mt-6 grid gap-4">
+                {students.map((name) => {
+                  const stats = attendanceStats(name);
+                  const rate = hourlyRates[name] || 0;
+                  const earned = stats.came * rate;
+                  const planned = stats.total * rate;
+                  const missed = stats.missed * rate;
+                  const moved = stats.moved * rate;
+                  return (
+                    <div key={name} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+                      <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="text-2xl font-black">{name}</h3><div className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm">{rate} ₽ / урок</div></div>
+                      <div className="mt-4 grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-4"><span>Пришёл: {stats.came}</span><span>Доход: {earned} ₽</span><span>План: {planned} ₽</span><span>Пропуски: {missed} ₽</span><span>Переносы: {moved} ₽</span></div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </div>
+        )}
+
         {adminView === "stats" && (
           <Card className="p-6">
-            <h2 className="text-3xl font-black">Ausfall- und Verschiebungsstatistik</h2>
-            <p className="mt-2 leading-7 text-slate-600">Diese Übersicht zeigt, wie häufig Schüler nicht zur Stunde kommen oder Stunden verschieben.</p>
+            <h2 className="text-3xl font-black">Статистика пропусков и переносов</h2>
+            <p className="mt-2 leading-7 text-slate-600">Эта таблица показывает, как часто ученики не приходят или переносят занятия.</p>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {students.map((name) => {
                 const stats = attendanceStats(name);
                 const problemRate = stats.total ? Math.round(((stats.missed + stats.moved) / stats.total) * 100) : 0;
+                const wordStats = getWordStats(name);
+                const todayQuiz = getDailyQuiz(name);
+                const todayState = safeGet(`daily-word-${todayQuiz.id}`, { answered: false });
+                const unansweredToday = todayState.answered ? 0 : 1;
                 return (
                   <div key={name} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-2xl font-black">{name}</h3>
-                      <div className="rounded-2xl bg-white px-3 py-2 text-sm font-black text-slate-700">{problemRate}% problematisch</div>
-                    </div>
-                    <div className="mt-4 grid gap-2 text-sm font-bold text-slate-700">
-                      <span>Geplant: {stats.total}</span>
-                      <span>Gekommen: {stats.came}</span>
-                      <span>Nicht gekommen: {stats.missed}</span>
-                      <span>Verschoben: {stats.moved}</span>
-                      <span>Noch offen: {stats.open}</span>
+                    <div className="flex items-center justify-between gap-3"><h3 className="text-2xl font-black">{name}</h3><div className="rounded-2xl bg-white px-3 py-2 text-sm font-black text-slate-700">{problemRate}% проблемно</div></div>
+                    <div className="mt-4 grid gap-2 text-sm font-bold text-slate-700"><span>Запланировано: {stats.total}</span><span>Пришёл: {stats.came}</span><span>Не пришёл: {stats.missed}</span><span>Перенос: {stats.moved}</span><span>Открыто: {stats.open}</span></div>
+                    <div className="mt-4 rounded-2xl bg-white p-4 text-sm font-bold text-slate-700 ring-1 ring-slate-100">
+                      Слова: правильно {wordStats.correct} • неправильно {wordStats.wrong} • сегодня не отвечено {unansweredToday} • уровень {wordStats.level || "A0"} • серия {wordStats.streak}/3
                     </div>
                   </div>
                 );
@@ -657,7 +782,7 @@ function StudentDashboard({ student, quiz, quizState, totalPoints, answerWeeklyQ
       <Card className="p-6">
         <h2 className="text-2xl font-black">Что важно на этой неделе</h2>
         <div className="mt-5 grid gap-3">
-          {["Повторить слово недели", "Проверить домашнее задание", "Открыть Miro перед уроком", "Подготовить 2–3 вопроса к уроку"].map((item) => <div key={item} className="rounded-2xl bg-slate-50 p-4 font-bold text-slate-700 ring-1 ring-slate-100">✓ {item}</div>)}
+          {["Повторить слово дня", "Проверить домашнее задание", "Открыть Miro перед уроком", "Подготовить 2–3 вопроса к уроку"].map((item) => <div key={item} className="rounded-2xl bg-slate-50 p-4 font-bold text-slate-700 ring-1 ring-slate-100">✓ {item}</div>)}
         </div>
       </Card>
     </div>
@@ -671,9 +796,9 @@ function Stat({ title, value, icon }) {
 function WeeklyWord({ quiz, quizState, answerWeeklyQuiz }) {
   return (
     <div className="rounded-[1.75rem] bg-gradient-to-br from-cyan-50 via-white to-yellow-50 p-6 ring-1 ring-cyan-100">
-      <div className="mb-3 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Слово недели • обновляется каждый понедельник в 00:00</div>
+      <div className="mb-3 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Слово дня • обновляется каждый день в 00:00 • уровень {quiz.level}</div>
       <h2 className="text-3xl font-black text-slate-950">{quiz.word}</h2>
-      <p className="mt-2 text-slate-600">Выберите правильный перевод. За правильный ответ — 10 баллов. За ошибку — 0 баллов.</p>
+      <p className="mt-2 text-slate-600">Выберите правильный перевод. За правильный ответ — 10 баллов. После 3 правильных ответов подряд уровень повышается. После ошибки уровень снижается на 1.</p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {quiz.options.map((option) => (
           <button key={option} onClick={() => answerWeeklyQuiz(option)} disabled={quizState?.answered} className={`rounded-2xl p-4 text-left font-black ring-1 transition ${quizState?.answered && option === quiz.answer ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : quizState?.answered && option === quizState.selected ? "bg-red-50 text-red-700 ring-red-200" : "bg-white text-slate-800 ring-slate-100 hover:bg-cyan-50"}`}>{option}</button>
@@ -696,7 +821,7 @@ function StudentInfo({ student, quiz, quizState, answerWeeklyQuiz }) {
             ["Домашнее задание", "Будет добавлено после урока. Статус: ожидает обновления."],
             ["Miro-доска", "Здесь можно разместить индивидуальную ссылку на Miro."],
             ["Цель", "Короткая цель на ближайшие занятия будет добавлена здесь."],
-            ["Повторение", "Повторить слова недели и примеры из урока."],
+            ["Повторение", "Повторить слова дня и примеры из урока."],
           ].map(([title, text]) => <div key={title} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100"><h3 className="text-xl font-black">{title}</h3><p className="mt-2 leading-7 text-slate-600">{text}</p></div>)}
         </div>
       </Card>
@@ -746,7 +871,7 @@ function ProgressInfo({ student, totalPoints }) {
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {skills.map((skill, i) => <div key={skill} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100"><div className="flex justify-between font-black"><span>{skill}</span><span>{45 + i * 10}%</span></div><div className="mt-3 h-3 rounded-full bg-white"><div className="h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${45 + i * 10}%` }} /></div></div>)}
       </div>
-      <div className="mt-6 rounded-3xl bg-yellow-50 p-5 font-black text-orange-800 ring-1 ring-yellow-100">Всего баллов за слова недели: {totalPoints}</div>
+      <div className="mt-6 rounded-3xl bg-yellow-50 p-5 font-black text-orange-800 ring-1 ring-yellow-100">Всего баллов за слова дня: {totalPoints}</div>
     </Card>
   );
 }
