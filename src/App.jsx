@@ -235,14 +235,31 @@ function normalizeLearningBank() {
 }
 normalizeLearningBank();
 
+function getStudentActiveLanguage(studentName) {
+  if (bilingualStudents.includes(studentName)) {
+    return safeGet(`active-language-${studentName}`, "en");
+  }
+  return germanStudents.includes(studentName) ? "de" : "en";
+}
+
+function saveStudentActiveLanguage(studentName, language) {
+  if (!bilingualStudents.includes(studentName)) return;
+  safeSet(`active-language-${studentName}`, language);
+}
+
 function getLearningLanguage(studentName) {
   if (studentName === adminUsername) return "en";
-  return germanStudents.includes(studentName) ? "de" : "en";
+  return getStudentActiveLanguage(studentName);
 }
 
 function getStudentLanguageLabel(studentName) {
   if (bilingualStudents.includes(studentName)) return "Deutsch & English";
   return germanStudents.includes(studentName) ? "Deutsch" : "English";
+}
+
+function getActiveLanguageLabel(studentName) {
+  const active = getStudentActiveLanguage(studentName);
+  return active === "de" ? "Deutsch" : "English";
 }
 
 function getLearningProgress(studentName) {
@@ -544,7 +561,7 @@ function getStudentWordLevel(studentName) {
 }
 
 function getDailyQuiz(studentName) {
-  const language = germanStudents.includes(studentName) ? "de" : "en";
+  const language = getStudentActiveLanguage(studentName);
   const level = getStudentWordLevel(studentName);
   const list = dailyWords[language][level] || dailyWords[language].A0;
   const start = new Date("2026-01-01T00:00:00");
@@ -591,9 +608,15 @@ function registerTournamentName(studentName, nickname) {
 function addTournamentPoints(studentName, points) {
   const tournament = getTournament();
   if (!tournament.participants?.[studentName]) return;
+  const today = getTodayKey();
+  if (tournament.awardedDays?.[studentName]?.[today]) return;
   const next = {
     ...tournament,
     points: { ...(tournament.points || {}), [studentName]: (tournament.points?.[studentName] || 0) + points },
+    awardedDays: {
+      ...(tournament.awardedDays || {}),
+      [studentName]: { ...(tournament.awardedDays?.[studentName] || {}), [today]: true },
+    },
   };
   saveTournament(next);
 }
@@ -801,11 +824,20 @@ function StudentPortal({ onBack }) {
   const [view, setView] = useState("dashboard");
   const [error, setError] = useState("");
   const [quizState, setQuizState] = useState(null);
+  const [languageVersion, setLanguageVersion] = useState(0);
 
   const quiz = student && student !== adminUsername ? getDailyQuiz(student) : null;
   const totalPoints = student ? safeGet(`points-${student}`, 0) : 0;
   const isAdmin = student === adminUsername;
   const language = student && (isAdmin ? "Admin" : getStudentLanguageLabel(student));
+  const activeLanguage = student && !isAdmin ? getActiveLanguageLabel(student) : null;
+
+  const handleLanguageChange = () => {
+    if (!student || isAdmin) return;
+    const nextQuiz = getDailyQuiz(student);
+    setQuizState(safeGet(`daily-word-${nextQuiz.id}`, { answered: false, correct: false, points: 0, selected: null }));
+    setLanguageVersion((value) => value + 1);
+  };
 
   const login = () => {
     const cleanName = name.trim();
@@ -878,7 +910,7 @@ function StudentPortal({ onBack }) {
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Вы вошли как: {student} • {language}</div>
+            <div className="inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Вы вошли как: {student} • {language}{bilingualStudents.includes(student) ? ` • сейчас: ${activeLanguage}` : ""}</div>
             <h1 className="mt-3 text-4xl font-black text-slate-950">Личный кабинет</h1>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -899,6 +931,12 @@ function StudentPortal({ onBack }) {
             <button key={id} onClick={() => setView(id)} className={`rounded-2xl p-4 text-left font-black shadow-sm ring-1 transition ${view === id ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}><Icon name={icon} /> {label}</button>
           ))}
         </div>
+
+        {bilingualStudents.includes(student) && (
+          <div className="mb-6">
+            <LanguageSwitcher student={student} onChange={handleLanguageChange} />
+          </div>
+        )}
 
         {view === "dashboard" && <StudentDashboard student={student} quiz={quiz} quizState={quizState} totalPoints={totalPoints} answerWeeklyQuiz={answerWeeklyQuiz} />}
         {view === "student" && <StudentInfo student={student} quiz={quiz} quizState={quizState} answerWeeklyQuiz={answerWeeklyQuiz} />}
@@ -1196,7 +1234,16 @@ function LearningMenu({ student, adminMode = false }) {
   const [selectedBonusType, setSelectedBonusType] = useState("reading");
   const [bonusProgress, setBonusProgress] = useState(getBonusProgress(student));
 
+  const [learningLanguageVersion, setLearningLanguageVersion] = useState(0);
   const activeLearningLanguage = adminMode && student === adminUsername ? adminLearningLanguage : getLearningLanguage(student);
+
+  const handleLearningLanguageChange = () => {
+    setSelectedPuzzle(null);
+    setAnswers({});
+    setSubmitted(false);
+    setRevealedAnswers({});
+    setLearningLanguageVersion((value) => value + 1);
+  };
 
   const completedCount = Object.values(progress.completed || {}).filter(Boolean).length;
 
@@ -1352,6 +1399,12 @@ function LearningMenu({ student, adminMode = false }) {
         <div className="rounded-3xl bg-yellow-50 p-4 text-sm font-black text-orange-800 ring-1 ring-yellow-100">Завершено: {completedCount}</div>
       </div>
 
+      {bilingualStudents.includes(student) && !adminMode && student !== adminUsername && (
+        <div className="mb-6">
+          <LanguageSwitcher student={student} onChange={handleLearningLanguageChange} />
+        </div>
+      )}
+
       {adminMode && student === adminUsername && (
         <div className="mb-6 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-100">
           <div className="mb-3 text-sm font-black text-slate-600">Язык учебного меню Anastasia</div>
@@ -1452,6 +1505,29 @@ function StudentLogin({ name, setName, password, setPassword, error, login, onBa
   );
 }
 
+function LanguageSwitcher({ student, onChange }) {
+  const [language, setLanguage] = useState(getStudentActiveLanguage(student));
+  if (!bilingualStudents.includes(student)) return null;
+
+  const changeLanguage = (nextLanguage) => {
+    setLanguage(nextLanguage);
+    saveStudentActiveLanguage(student, nextLanguage);
+    if (onChange) onChange(nextLanguage);
+  };
+
+  return (
+    <Card className="p-6">
+      <div className="mb-4 inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Выбор языка • сейчас: {language === "de" ? "Deutsch" : "English"}</div>
+      <h2 className="text-2xl font-black">Выберите язык для заданий</h2>
+      <p className="mt-2 leading-7 text-slate-600">Слово дня и учебное меню открываются на выбранном языке. В турнире Daily Word баллы начисляются только один раз в день, даже если вы отвечаете на двух языках.</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <button onClick={() => changeLanguage("en")} className={`rounded-2xl px-5 py-4 font-black ring-1 transition ${language === "en" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>English</button>
+        <button onClick={() => changeLanguage("de")} className={`rounded-2xl px-5 py-4 font-black ring-1 transition ${language === "de" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>Deutsch</button>
+      </div>
+    </Card>
+  );
+}
+
 function TournamentWidget({ student, adminMode = false }) {
   const [tournament, setTournament] = useState(getTournament());
   const [nickname, setNickname] = useState(tournament.participants?.[student] || "");
@@ -1471,7 +1547,7 @@ function TournamentWidget({ student, adminMode = false }) {
     <Card className="p-6">
       <div className="mb-4 inline-flex rounded-full bg-yellow-100 px-4 py-2 text-sm font-black text-orange-800">Ежемесячный турнир Daily Word • {monthKey}</div>
       <h2 className="text-3xl font-black">Турнир слов дня</h2>
-      <p className="mt-2 leading-7 text-slate-600">Ученики могут участвовать независимо от языка. За правильный ответ в Daily Word начисляется 10 турнирных баллов.</p>
+      <p className="mt-2 leading-7 text-slate-600">Ученики могут участвовать независимо от языка. За правильный ответ в Daily Word начисляется 10 турнирных баллов, но только один раз в день.</p>
       {!adminMode && (
         <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
           <input value={nickname} onChange={(e) => setNickname(e.target.value)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Ваш уникальный турнирный ник" />
