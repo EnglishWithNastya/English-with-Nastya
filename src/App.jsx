@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 
 const fadeUp = {
@@ -232,7 +232,7 @@ function getLearningLanguage(studentName) {
 }
 
 function getLearningProgress(studentName) {
-  return safeGet(`learning-progress-${studentName}`, { unlockedLevel: "A0", completed: {}, scores: {} });
+  return safeGet(`learning-progress-${studentName}`, { unlockedLevel: "A0", completed: {}, scores: {}, answers: {} });
 }
 
 function saveLearningProgress(studentName, progress) {
@@ -287,13 +287,14 @@ function generateLearningPuzzle(studentName, level, puzzleNumber, adminMode = fa
   return tasks;
 }
 
-function completeLearningPuzzle(studentName, level, puzzleNumber, score) {
+function completeLearningPuzzle(studentName, level, puzzleNumber, score, answerDetails = []) {
   const progress = getLearningProgress(studentName);
   const key = `${level}-${puzzleNumber}`;
   const next = {
     ...progress,
     completed: { ...(progress.completed || {}), [key]: score >= 8 },
     scores: { ...(progress.scores || {}), [key]: score },
+    answers: { ...(progress.answers || {}), [key]: answerDetails },
   };
   if (score >= 8 && puzzleNumber >= puzzlesPerLevel) {
     const levelIndex = learningLevels.indexOf(level);
@@ -303,14 +304,14 @@ function completeLearningPuzzle(studentName, level, puzzleNumber, score) {
   return next;
 }
 
-const bonusTypes = [
-  ["reading", "Бонус: чтение"],
-  ["dialog", "Бонус: диалоги"],
-];
+function isLearningLevelCompleted(progress, level) {
+  return Array.from({ length: puzzlesPerLevel }, (_, i) => i + 1).every((number) => Boolean(progress.completed?.[`${level}-${number}`]));
+}
+
 const bonusPerLevel = 20;
 
 function getBonusProgress(studentName) {
-  return safeGet(`bonus-progress-${studentName}`, { completed: {}, scores: {} });
+  return safeGet(`bonus-progress-${studentName}`, { completed: {}, scores: {}, answers: {} });
 }
 
 function saveBonusProgress(studentName, progress) {
@@ -327,130 +328,100 @@ function isBonusUnlocked(studentName, type, level, bonusNumber, adminMode = fals
 function generateReadingBonus(studentName, level, bonusNumber, adminMode = false, languageOverride = null) {
   const lang = languageOverride || (adminMode && studentName === adminUsername ? "en" : getLearningLanguage(studentName));
   const levelIndex = Math.max(0, learningLevels.indexOf(level));
-
   const easyText = lang === "de"
-    ? "Anna steht morgens früh auf und frühstückt zu Hause. Danach fährt sie mit dem Bus zur Schule. Am Nachmittag macht sie Hausaufgaben und wiederholt neue Wörter. Am Abend plant sie den nächsten Tag."
-    : "Anna gets up early and has breakfast at home. Then she takes the bus to school. In the afternoon, she does her homework and reviews new words. In the evening, she plans the next day.";
-
-  const b2Text = lang === "de"
-    ? "Lena wollte ihre wöchentlichen Ausgaben senken, ohne auf soziale Aktivitäten zu verzichten. Deshalb verglich sie Abonnements, plante ihre Einkäufe genauer und legte eine kleine Rücklage für unerwartete Reparaturen an. Nach einigen Wochen bemerkte sie, dass nicht einzelne große Entscheidungen, sondern viele kleine Gewohnheiten den größten Unterschied machten."
-    : "Lena wanted to reduce her weekly expenses without giving up social activities. She compared subscriptions, planned her grocery shopping more carefully and set aside a small amount for unexpected repairs. After a few weeks, she noticed that it was not one major decision, but many small habits that made the biggest difference.";
-
-  const c1Text = lang === "de"
-    ? "Obwohl die neue Lernroutine zunächst sehr ambitioniert wirkte, erwies sie sich im Alltag als erstaunlich praktikabel. Der entscheidende Vorteil lag nicht in der Menge der Übungen, sondern in ihrer Regelmäßigkeit: kurze Wiederholungen, gezielte Fehleranalyse und bewusste Anwendung neuer Redemittel führten zu stabileren Fortschritten als lange, aber seltene Lerneinheiten."
-    : "Although the new learning routine seemed rather ambitious at first, it proved surprisingly practical in everyday life. Its main advantage was not the quantity of exercises, but their consistency: short revision sessions, targeted error analysis and deliberate use of new phrases led to more stable progress than long but infrequent study sessions.";
-
-  const c2Text = lang === "de"
-    ? "Die Debatte über digitale Lernwerkzeuge wird häufig so geführt, als stünden Effizienz und pädagogische Tiefe zwangsläufig im Widerspruch. Tatsächlich hängt der Nutzen solcher Werkzeuge jedoch weniger von ihrer technischen Raffinesse ab als von der didaktischen Einbettung: Ohne klare Lernziele, reflektierte Rückmeldung und angemessene Progression bleibt selbst eine beeindruckende Plattform oberflächlich; mit einem durchdachten Konzept kann dagegen schon ein schlichtes digitales Board komplexe Lernprozesse sichtbar und steuerbar machen."
-    : "The debate about digital learning tools is often framed as if efficiency and pedagogical depth were necessarily at odds. In practice, however, the value of such tools depends less on their technical sophistication than on their didactic integration: without clear learning goals, reflective feedback and appropriate progression, even an impressive platform remains superficial; with a well-designed concept, even a simple digital board can make complex learning processes visible and manageable.";
-
-  const text = levelIndex >= 6 ? c2Text : levelIndex >= 5 ? c1Text : levelIndex >= 4 ? b2Text : easyText;
-
+    ? "Anna steht früh auf, trinkt Wasser und fährt mit dem Bus zur Schule. Am Nachmittag macht sie Hausaufgaben und wiederholt neue Wörter."
+    : "Anna gets up early, drinks water and takes the bus to school. In the afternoon, she does her homework and reviews new words.";
+  const advancedText = lang === "de"
+    ? "Digitale Lernwerkzeuge sind nur dann wirklich hilfreich, wenn sie nicht bloß Aufgaben sammeln, sondern klare Lernziele, sinnvolle Rückmeldung und eine nachvollziehbare Progression verbinden. Ohne diese Struktur bleibt selbst eine moderne Plattform oberflächlich; mit guter didaktischer Planung kann dagegen auch ein einfaches digitales Board komplexe Lernprozesse sichtbar machen."
+    : "Digital learning tools are genuinely useful only when they do more than collect exercises: they need clear learning goals, meaningful feedback and transparent progression. Without this structure, even a modern platform remains superficial; with thoughtful didactic planning, even a simple digital board can make complex learning processes visible.";
+  const text = levelIndex >= 4 ? advancedText : easyText;
   const easyQuestions = lang === "de"
     ? [
-        { q: "Wann steht Anna auf?", correct: "morgens früh", options: ["nachts", "morgens früh", "am Mittag", "nie"], explanation: "Im Text steht: Anna steht morgens früh auf." },
-        { q: "Womit fährt Anna zur Schule?", correct: "mit dem Bus", options: ["mit dem Taxi", "zu Fuß", "mit dem Bus", "mit dem Zug"], explanation: "Im Text steht: fährt sie mit dem Bus zur Schule." },
-        { q: "Was macht Anna am Nachmittag?", correct: "Hausaufgaben", options: ["einkaufen", "Hausaufgaben", "kochen", "schlafen"], explanation: "Im Text steht: Am Nachmittag macht sie Hausaufgaben." },
-        { q: "Was wiederholt Anna?", correct: "neue Wörter", options: ["neue Wörter", "alte Filme", "Telefonnummern", "Rezepte"], explanation: "Im Text steht: wiederholt neue Wörter." },
-        { q: "Was plant Anna am Abend?", correct: "den nächsten Tag", options: ["eine Reise", "den nächsten Tag", "ein Fest", "einen Einkauf"], explanation: "Im Text steht: Am Abend plant sie den nächsten Tag." },
+        { q: "Wann steht Anna auf?", correct: "früh", options: ["spät", "früh", "nie", "nachts"], explanation: "Im Text steht: Anna steht früh auf." },
+        { q: "Womit fährt Anna zur Schule?", correct: "mit dem Bus", options: ["mit dem Zug", "mit dem Bus", "zu Fuß", "mit dem Taxi"], explanation: "Im Text steht: fährt mit dem Bus zur Schule." },
+        { q: "Was macht Anna am Nachmittag?", correct: "Hausaufgaben", options: ["Hausaufgaben", "Einkäufe", "Sport", "Kochen"], explanation: "Im Text steht: Am Nachmittag macht sie Hausaufgaben." },
+        { q: "Was wiederholt Anna?", correct: "neue Wörter", options: ["alte Filme", "neue Wörter", "Telefonnummern", "Rezepte"], explanation: "Im Text steht: wiederholt neue Wörter." },
+        { q: "Was trinkt Anna?", correct: "Wasser", options: ["Tee", "Kaffee", "Wasser", "Milch"], explanation: "Im Text steht: trinkt Wasser." },
       ]
     : [
-        { q: "When does Anna get up?", correct: "early", options: ["at night", "early", "at noon", "never"], explanation: "The text says: Anna gets up early." },
-        { q: "How does Anna go to school?", correct: "by bus", options: ["by taxi", "on foot", "by bus", "by train"], explanation: "The text says: she takes the bus to school." },
-        { q: "What does Anna do in the afternoon?", correct: "homework", options: ["shopping", "homework", "cooking", "sleeping"], explanation: "The text says: she does her homework." },
-        { q: "What does Anna review?", correct: "new words", options: ["new words", "old films", "phone numbers", "recipes"], explanation: "The text says: reviews new words." },
-        { q: "What does Anna plan in the evening?", correct: "the next day", options: ["a trip", "the next day", "a party", "shopping"], explanation: "The text says: she plans the next day." },
+        { q: "When does Anna get up?", correct: "early", options: ["late", "early", "never", "at night"], explanation: "The text says: Anna gets up early." },
+        { q: "How does Anna go to school?", correct: "by bus", options: ["by train", "by bus", "on foot", "by taxi"], explanation: "The text says: she takes the bus to school." },
+        { q: "What does Anna do in the afternoon?", correct: "homework", options: ["homework", "shopping", "sport", "cooking"], explanation: "The text says: she does her homework." },
+        { q: "What does Anna review?", correct: "new words", options: ["old films", "new words", "phone numbers", "recipes"], explanation: "The text says: reviews new words." },
+        { q: "What does Anna drink?", correct: "water", options: ["tea", "coffee", "water", "milk"], explanation: "The text says: drinks water." },
       ];
-
   const advancedQuestions = lang === "de"
     ? [
-        { q: "Wovon hängt der Nutzen digitaler Lernwerkzeuge laut Text vor allem ab?", correct: "von der didaktischen Einbettung", options: ["von der didaktischen Einbettung", "von möglichst vielen Funktionen", "vom Preis der Plattform", "von der Länge der Übungen"], explanation: "Der Text betont, dass die didaktische Einbettung wichtiger ist als technische Raffinesse." },
-        { q: "Welche Aussage entspricht der zentralen These?", correct: "Technik allein garantiert keine Lerntiefe.", options: ["Technik allein garantiert keine Lerntiefe.", "Komplexe Plattformen sind immer besser.", "Feedback ist im digitalen Lernen unwichtig.", "Kurze Übungen verhindern Fortschritt."], explanation: "Im Text heißt es, dass ohne Ziele, Feedback und Progression auch beeindruckende Plattformen oberflächlich bleiben." },
-        { q: "Was bedeutet hier „oberflächlich“ am ehesten?", correct: "ohne tiefere pädagogische Wirkung", options: ["ohne tiefere pädagogische Wirkung", "besonders kreativ", "technisch fehlerhaft", "sehr kostengünstig"], explanation: "Oberflächlich beschreibt hier fehlende inhaltliche oder didaktische Tiefe." },
-        { q: "Welche Bedingung wird nicht als wichtig genannt?", correct: "automatische Ranglisten", options: ["automatische Ranglisten", "klare Lernziele", "reflektierte Rückmeldung", "angemessene Progression"], explanation: "Ranglisten werden nicht genannt; die anderen drei Punkte stehen ausdrücklich im Text." },
-        { q: "Welche Schlussfolgerung lässt sich ziehen?", correct: "Auch einfache Tools können wirksam sein, wenn sie gut eingesetzt werden.", options: ["Auch einfache Tools können wirksam sein, wenn sie gut eingesetzt werden.", "Digitale Boards sind grundsätzlich ungeeignet.", "Effizienz schließt Lerntiefe immer aus.", "Technische Raffinesse ist der einzige Erfolgsfaktor."], explanation: "Der letzte Satz sagt, dass ein schlichtes digitales Board mit gutem Konzept komplexe Lernprozesse sichtbar machen kann." },
+        { q: "Wovon hängt der Nutzen digitaler Lernwerkzeuge laut Text vor allem ab?", correct: "von didaktischer Struktur", options: ["von didaktischer Struktur", "vom Preis", "von der Farbe", "von der Länge der App"], explanation: "Der Text nennt klare Ziele, Rückmeldung und Progression als entscheidende Struktur." },
+        { q: "Welche Aussage passt am besten zur Hauptidee?", correct: "Technik allein reicht nicht aus.", options: ["Technik allein reicht nicht aus.", "Apps ersetzen Unterricht immer.", "Feedback ist unwichtig.", "Einfache Tools sind nutzlos."], explanation: "Der Text sagt, dass ohne didaktische Planung auch moderne Plattformen oberflächlich bleiben." },
+        { q: "Was bedeutet „oberflächlich“ hier?", correct: "ohne tiefere Lernwirkung", options: ["ohne tiefere Lernwirkung", "besonders schnell", "sehr günstig", "technisch perfekt"], explanation: "Oberflächlich bedeutet hier: ohne echte pädagogische Tiefe." },
+        { q: "Was kann auch ein einfaches digitales Board leisten?", correct: "Lernprozesse sichtbar machen", options: ["Lernprozesse sichtbar machen", "alle Fehler vermeiden", "Lehrer ersetzen", "Prüfungen abschaffen"], explanation: "Im Text steht: ein Board kann Lernprozesse sichtbar machen." },
+        { q: "Welche Bedingung wird nicht genannt?", correct: "automatische Ranglisten", options: ["klare Lernziele", "automatische Ranglisten", "sinnvolle Rückmeldung", "Progression"], explanation: "Automatische Ranglisten werden im Text nicht erwähnt." },
       ]
     : [
-        { q: "According to the text, what does the value of digital learning tools mainly depend on?", correct: "their didactic integration", options: ["their didactic integration", "the number of features", "the platform's price", "the length of exercises"], explanation: "The text states that didactic integration matters more than technical sophistication." },
-        { q: "Which statement best reflects the central argument?", correct: "Technology alone does not guarantee depth of learning.", options: ["Technology alone does not guarantee depth of learning.", "Complex platforms are always better.", "Feedback is irrelevant in digital learning.", "Short exercises prevent progress."], explanation: "The text says that without goals, feedback and progression, even impressive platforms remain superficial." },
-        { q: "What does “superficial” most nearly mean in this context?", correct: "lacking deeper pedagogical value", options: ["lacking deeper pedagogical value", "highly creative", "technically broken", "very inexpensive"], explanation: "Superficial refers to a lack of meaningful educational depth." },
-        { q: "Which condition is not mentioned as important?", correct: "automatic leaderboards", options: ["automatic leaderboards", "clear learning goals", "reflective feedback", "appropriate progression"], explanation: "Leaderboards are not mentioned; the other three are explicitly named." },
-        { q: "What conclusion follows from the text?", correct: "Even simple tools can be effective if used thoughtfully.", options: ["Even simple tools can be effective if used thoughtfully.", "Digital boards are inherently unsuitable.", "Efficiency always excludes depth.", "Technical sophistication is the only success factor."], explanation: "The final sentence says that even a simple digital board can be effective with a well-designed concept." },
+        { q: "According to the text, what do digital learning tools mainly need?", correct: "didactic structure", options: ["didactic structure", "a high price", "bright colours", "long menus"], explanation: "The text highlights goals, feedback and progression as key elements." },
+        { q: "Which statement best matches the main idea?", correct: "Technology alone is not enough.", options: ["Technology alone is not enough.", "Apps always replace teachers.", "Feedback is irrelevant.", "Simple tools are useless."], explanation: "The text says modern platforms remain superficial without didactic planning." },
+        { q: "What does “superficial” mean here?", correct: "lacking deeper learning value", options: ["lacking deeper learning value", "very fast", "very cheap", "technically perfect"], explanation: "Superficial means lacking meaningful educational depth." },
+        { q: "What can even a simple digital board do?", correct: "make learning processes visible", options: ["make learning processes visible", "avoid all mistakes", "replace teachers", "cancel exams"], explanation: "The text says a board can make learning processes visible." },
+        { q: "Which condition is not mentioned?", correct: "automatic leaderboards", options: ["clear goals", "automatic leaderboards", "meaningful feedback", "progression"], explanation: "Automatic leaderboards are not mentioned in the text." },
       ];
-
-  const questions = levelIndex >= 5 ? advancedQuestions : levelIndex >= 4 ? advancedQuestions : easyQuestions;
+  const questions = levelIndex >= 4 ? advancedQuestions : easyQuestions;
   return { text, tasks: questions.map((item, index) => ({ ...item, options: deterministicShuffle(item.options, bonusNumber * 31 + index * 7 + levelIndex), type: "Чтение" })) };
 }
 
 function generateDialogBonus(studentName, level, bonusNumber, adminMode = false, languageOverride = null) {
   const lang = languageOverride || (adminMode && studentName === adminUsername ? "en" : getLearningLanguage(studentName));
   const levelIndex = Math.max(0, learningLevels.indexOf(level));
-  const context = lang === "de"
-    ? "Dialog im Alltag: Ergänzen Sie passende Wörter oder ganze Sätze. Ab B2 werden indirekte Bedeutungen, Register und pragmatische Antworten wichtiger."
-    : "Everyday dialogue: Complete missing words or whole sentences. From B2 upward, implied meaning, register and pragmatic responses become more important.";
-
-  const easy = lang === "de"
+  const context = lang === "de" ? "Диалог: выберите подходящее слово или фразу." : "Dialogue: choose the suitable word or phrase.";
+  const simple = lang === "de"
     ? [
-        { q: "A: Hallo! Wie ___ du? B: Gut, danke.", correct: "geht es", options: ["kommst", "geht es", "trinkst", "kaufst"], explanation: "Die Frage lautet: Wie geht es dir?" },
-        { q: "A: Hast du heute Zeit? B: Ja, ich habe um fünf ___.", correct: "Zeit", options: ["Wasser", "Zeit", "Buch", "Fenster"], explanation: "Man sagt: Ich habe Zeit." },
+        { q: "A: Hallo! Wie ___ du? B: Gut, danke.", correct: "geht es", options: ["kommst", "geht es", "trinkst", "kaufst"], explanation: "Правильно: Wie geht es dir?" },
+        { q: "A: Hast du Zeit? B: Ja, ich habe ___.", correct: "Zeit", options: ["Wasser", "Zeit", "Buch", "Fenster"], explanation: "Man sagt: Ich habe Zeit." },
         { q: "A: Wo treffen wir uns? B: ___ dem Café.", correct: "Vor", options: ["Ohne", "Bis", "Vor", "Seit"], explanation: "Vor dem Café beschreibt den Treffpunkt." },
-        { q: "A: Soll ich dich anrufen? B: Ja, ___ mich bitte an.", correct: "ruf", options: ["lies", "iss", "ruf", "schlaf"], explanation: "Anrufen: Ruf mich bitte an." },
-        { q: "A: Bis später! B: ___.", correct: "Bis später", options: ["Guten Appetit", "Keine Milch", "Bis später", "Sehr alt"], explanation: "Die passende Antwort ist: Bis später." },
+        { q: "A: Rufst du mich an? B: Ja, ich ___ dich an.", correct: "rufe", options: ["lese", "esse", "rufe", "schlafe"], explanation: "С ich используется: ich rufe an." },
+        { q: "A: Bis später! B: ___.", correct: "Bis später", options: ["Guten Appetit", "Keine Milch", "Bis später", "Sehr alt"], explanation: "Подходящий ответ: Bis später." },
       ]
     : [
-        { q: "A: Hi! How ___ you? B: I'm fine, thanks.", correct: "are", options: ["is", "are", "am", "be"], explanation: "The correct question is: How are you?" },
-        { q: "A: Are you free today? B: Yes, I have ___ at five.", correct: "time", options: ["water", "time", "book", "window"], explanation: "We say: I have time." },
-        { q: "A: Where shall we meet? B: ___ the café.", correct: "In front of", options: ["Without", "Since", "In front of", "During"], explanation: "In front of the café describes the meeting point." },
-        { q: "A: Should I call you? B: Yes, please ___.", correct: "call me", options: ["eat me", "read me", "call me", "sleep me"], explanation: "The correct phrase is: please call me." },
+        { q: "A: Hi! How ___ you? B: I'm fine, thanks.", correct: "are", options: ["is", "are", "am", "be"], explanation: "Correct: How are you?" },
+        { q: "A: Are you free? B: Yes, I have ___.", correct: "time", options: ["water", "time", "book", "window"], explanation: "We say: I have time." },
+        { q: "A: Where shall we meet? B: ___ the café.", correct: "In front of", options: ["Without", "Since", "In front of", "During"], explanation: "In front of describes the meeting point." },
+        { q: "A: Should I call you? B: Yes, please ___.", correct: "call me", options: ["eat me", "read me", "call me", "sleep me"], explanation: "Correct phrase: please call me." },
         { q: "A: See you later! B: ___.", correct: "See you later", options: ["Good appetite", "No milk", "See you later", "Very old"], explanation: "The matching reply is: See you later." },
       ];
-
-  const b2 = lang === "de"
+  const advanced = lang === "de"
     ? [
-        { q: "A: Ich schaffe es heute nicht pünktlich. B: Kein Problem, wir können den Termin ___.", correct: "verschieben", options: ["vergessen", "verschieben", "bezahlen", "öffnen"], explanation: "Einen Termin kann man verschieben." },
-        { q: "A: Ich habe die Quittung verloren. B: Dann wird die Rückgabe wahrscheinlich ___.", correct: "schwierig", options: ["hungrig", "schwierig", "laut", "rund"], explanation: "Ohne Quittung ist eine Rückgabe oft schwierig." },
-        { q: "A: Könnten Sie das bitte wiederholen? B: Ja, ___.", correct: "natürlich", options: ["gestern", "trotzdem", "natürlich", "kaum"], explanation: "Natürlich ist eine passende höfliche Antwort." },
-        { q: "A: Ich finde den Vorschlag gut, aber die Umsetzung wirkt riskant. B: Dann sollten wir ihn zuerst ___.", correct: "prüfen", options: ["prüfen", "vergessen", "verstecken", "bezahlen"], explanation: "Einen riskanten Vorschlag sollte man prüfen." },
-        { q: "A: Das klingt machbar. B: Ja, wenn wir den Plan ___.", correct: "vereinfachen", options: ["verstecken", "vereinfachen", "verschlafen", "vergessen"], explanation: "Einen Plan kann man vereinfachen." },
+        { q: "A: Der Plan klingt gut, ist aber kaum umsetzbar. B: Also ist er praktisch ___.", correct: "nicht tragfähig", options: ["nicht tragfähig", "beliebig", "lustig", "farbig"], explanation: "Nicht tragfähig bedeutet: praktisch nicht stabil oder realistisch." },
+        { q: "A: Ich möchte die Entscheidung nicht ablehnen, nur genauer prüfen. B: Sie wünschen also eine ___ Bewertung.", correct: "differenzierte", options: ["differenzierte", "zufällige", "laute", "kurze"], explanation: "Differenziert bedeutet: mit mehreren Aspekten betrachtet." },
+        { q: "A: Das Problem kommt sonst wieder. B: Dann brauchen wir eine ___ Lösung.", correct: "nachhaltige", options: ["nachhaltige", "dekorative", "kurze", "späte"], explanation: "Nachhaltig bedeutet hier: langfristig wirksam." },
+        { q: "A: Die Formulierung klingt zu hart. B: Dann sollte ich sie ___.", correct: "abmildern", options: ["abmildern", "vergrößern", "bezahlen", "vergessen"], explanation: "Eine harte Formulierung kann man abmildern." },
+        { q: "A: Das Argument braucht mehr Kontext. B: Es sollte stärker ___ werden.", correct: "kontextualisiert", options: ["kontextualisiert", "versteckt", "verkauft", "verschlafen"], explanation: "Kontextualisiert bedeutet: in einen größeren Zusammenhang gesetzt." },
       ]
     : [
-        { q: "A: I can't make it on time today. B: No problem, we can ___ the appointment.", correct: "reschedule", options: ["forget", "reschedule", "repair", "rent"], explanation: "You can reschedule an appointment." },
-        { q: "A: I lost the receipt. B: Then the refund may be ___.", correct: "difficult", options: ["hungry", "difficult", "round", "loud"], explanation: "Without a receipt, a refund can be difficult." },
-        { q: "A: Could you repeat that, please? B: Yes, ___.", correct: "of course", options: ["yesterday", "despite", "of course", "hardly"], explanation: "Of course is a polite reply." },
-        { q: "A: I like the proposal, but the implementation seems risky. B: Then we should ___ it first.", correct: "review", options: ["review", "hide", "rent", "forget"], explanation: "A risky proposal should be reviewed first." },
-        { q: "A: That sounds feasible. B: Yes, if we ___ the plan.", correct: "simplify", options: ["hide", "simplify", "oversleep", "forget"], explanation: "You can simplify a plan." },
+        { q: "A: The plan sounds good, but it is hardly viable. B: So it is practically ___.", correct: "unworkable", options: ["unworkable", "colourful", "random", "funny"], explanation: "Unworkable means it cannot realistically be implemented." },
+        { q: "A: I don't reject the decision; I want to examine it more carefully. B: You want a more ___ assessment.", correct: "nuanced", options: ["nuanced", "loud", "accidental", "short"], explanation: "Nuanced means considering complexity and different aspects." },
+        { q: "A: Otherwise the problem will come back. B: Then we need a ___ solution.", correct: "sustainable", options: ["sustainable", "decorative", "late", "random"], explanation: "Sustainable means lasting and structurally sound." },
+        { q: "A: The wording sounds too blunt. B: Then I should ___.", correct: "soften it", options: ["soften it", "enlarge it", "rent it", "forget it"], explanation: "If wording is too blunt, you soften it." },
+        { q: "A: The argument needs more context. B: It should be more thoroughly ___.", correct: "contextualised", options: ["contextualised", "hidden", "sold", "overslept"], explanation: "Contextualised means placed into a broader context." },
       ];
-
-  const c2 = lang === "de"
-    ? [
-        { q: "A: Der Plan ist elegant, aber unter den gegebenen Einschränkungen kaum tragfähig. B: Mit anderen Worten: Er ist theoretisch überzeugend, aber praktisch ___.", correct: "nicht belastbar", options: ["nicht belastbar", "völlig nebensächlich", "sprachlich veraltet", "zufällig entstanden"], explanation: "Die Antwort fasst die implizite Kritik zusammen: praktisch nicht belastbar." },
-        { q: "A: Ich möchte die Entscheidung nicht grundsätzlich infrage stellen, nur ihre Folgen sauber abwägen. B: Sie plädieren also für eine ___ Bewertung.", correct: "differenzierte", options: ["differenzierte", "willkürliche", "oberflächliche", "überstürzte"], explanation: "Eine differenzierte Bewertung berücksichtigt verschiedene Aspekte, ohne alles abzulehnen." },
-        { q: "A: Wenn wir das Problem nur kosmetisch lösen, taucht es in zwei Wochen wieder auf. B: Dann brauchen wir keine Zwischenlösung, sondern eine ___ Lösung.", correct: "nachhaltige", options: ["nachhaltige", "beliebige", "provisorische", "dekorative"], explanation: "Nachhaltig bedeutet hier langfristig tragfähig." },
-        { q: "A: Ihre Formulierung ist korrekt, klingt aber etwas schroff. B: Dann sollte ich sie wohl ___.", correct: "abmildern", options: ["abmildern", "ignorieren", "beschleunigen", "vergrößern"], explanation: "Eine schroffe Formulierung kann man abmildern." },
-        { q: "A: Das Argument ist nicht falsch, greift aber zu kurz. B: Es müsste also stärker ___.", correct: "kontextualisiert werden", options: ["kontextualisiert werden", "auswendig gelernt werden", "verkürzt werden", "verschwiegen werden"], explanation: "Wenn ein Argument zu kurz greift, braucht es mehr Kontext." },
-      ]
-    : [
-        { q: "A: The plan is elegant, but under the current constraints it is hardly viable. B: In other words, it is theoretically persuasive but practically ___.", correct: "unworkable", options: ["unworkable", "irrelevant", "outdated", "accidental"], explanation: "Unworkable captures the implied criticism: it cannot realistically be implemented." },
-        { q: "A: I don't want to dismiss the decision outright; I just want to weigh its consequences carefully. B: So you're calling for a more ___ assessment.", correct: "nuanced", options: ["nuanced", "arbitrary", "superficial", "hasty"], explanation: "A nuanced assessment considers complexity rather than rejecting something outright." },
-        { q: "A: If we only address the problem cosmetically, it will reappear in two weeks. B: Then we need a ___ solution, not a temporary fix.", correct: "sustainable", options: ["sustainable", "random", "decorative", "makeshift"], explanation: "Sustainable means lasting and structurally sound in this context." },
-        { q: "A: Your wording is accurate, but it sounds rather blunt. B: Then I should probably ___.", correct: "soften it", options: ["soften it", "ignore it", "speed it up", "enlarge it"], explanation: "If wording is too blunt, you soften it." },
-        { q: "A: The argument isn't wrong, but it lacks sufficient context. B: It needs to be more thoroughly ___.", correct: "contextualised", options: ["contextualised", "memorised", "shortened", "concealed"], explanation: "An argument lacking context needs to be contextualised." },
-      ];
-
-  const tasks = levelIndex >= 6 ? c2 : levelIndex >= 4 ? b2 : easy;
+  const tasks = levelIndex >= 4 ? advanced : simple;
   return { context, tasks: tasks.map((item, index) => ({ ...item, options: deterministicShuffle(item.options, bonusNumber * 41 + index * 9 + levelIndex), type: "Диалог" })) };
 }
 
-function completeBonus(studentName, type, level, bonusNumber, score) {
+function completeBonus(studentName, type, level, bonusNumber, score, answerDetails = []) {
   const progress = getBonusProgress(studentName);
   const key = `${type}-${level}-${bonusNumber}`;
   const next = {
     ...progress,
     completed: { ...(progress.completed || {}), [key]: score >= 4 },
     scores: { ...(progress.scores || {}), [key]: score },
+    answers: { ...(progress.answers || {}), [key]: answerDetails },
   };
   saveBonusProgress(studentName, next);
   return next;
+}
+
+function isBonusLevelCompleted(progress, type, level) {
+  return Array.from({ length: bonusPerLevel }, (_, i) => i + 1).every((number) => Boolean(progress.completed?.[`${type}-${level}-${number}`]));
 }
 
 const site = {
@@ -570,6 +541,99 @@ function getDailyQuiz(studentName) {
 
 function getWordStats(studentName) {
   return safeGet(`word-stats-${studentName}`, { correct: 0, wrong: 0, unanswered: 0, streak: 0, level: "A0" });
+}
+
+const progressCategories = ["Vocabulary", "Grammar", "Speaking", "Listening"];
+const progressCategoryLabels = {
+  Vocabulary: "Словарный запас",
+  Grammar: "Грамматика",
+  Speaking: "Говорение",
+  Listening: "Аудирование",
+};
+const progressLevelRanges = [
+  ["A0", 0, 12],
+  ["A1", 13, 25],
+  ["A2", 26, 40],
+  ["B1", 41, 55],
+  ["B2", 56, 70],
+  ["C1", 71, 84],
+  ["C2", 85, 100],
+];
+
+function getProgressSettings(studentName) {
+  return safeGet(`progress-settings-${studentName}`, {
+    includeLearningMenu: false,
+    teacherAssessment: { Vocabulary: 0, Grammar: 0, Speaking: 0, Listening: 0 },
+  });
+}
+
+function getStudentContent(studentName) {
+  return safeGet(`student-content-${studentName}`, {
+    goal: "Короткая цель на ближайшие занятия будет добавлена здесь.",
+    homework: "Будет добавлено после урока. Статус: ожидает обновления.",
+    materials: "Здесь можно разместить индивидуальную ссылку на Miro.",
+    revision: "Повторить слова дня и примеры из урока.",
+    parentProgress: "Здесь можно фиксировать прогресс ученика: грамматика, лексика, чтение, говорение.",
+    parentAttendance: "Информация о прошедших и запланированных уроках.",
+    parentPayment: "Здесь можно добавить статус оплаты и выбранный формат занятий.",
+    parentRecommendations: "Короткие рекомендации для поддержки обучения дома.",
+  });
+}
+
+function saveStudentContent(studentName, content) {
+  safeSet(`student-content-${studentName}`, content);
+}
+
+function saveProgressSettings(studentName, settings) {
+  safeSet(`progress-settings-${studentName}`, settings);
+}
+
+function scoreToLevel(score) {
+  const item = progressLevelRanges.find(([, min, max]) => score >= min && score <= max);
+  return item ? item[0] : score > 100 ? "C2" : "A0";
+}
+
+function levelToScore(level) {
+  const item = progressLevelRanges.find(([name]) => name === level);
+  if (!item) return 0;
+  const [, min, max] = item;
+  return Math.round((min + max) / 2);
+}
+
+function levelIndex(level) {
+  return progressLevelRanges.findIndex(([name]) => name === level);
+}
+
+function dailyVocabularyScore(studentName) {
+  const stats = getWordStats(studentName);
+  const level = stats.level || getStudentWordLevel(studentName) || "A0";
+  return levelToScore(level);
+}
+
+function learningMenuScore(studentName) {
+  const progress = getLearningProgress(studentName);
+  const unlockedLevel = progress.unlockedLevel || "A0";
+  return levelToScore(unlockedLevel);
+}
+
+function calculateCategoryScores(studentName) {
+  const settings = getProgressSettings(studentName);
+  const teacher = settings.teacherAssessment || {};
+  const learning = settings.includeLearningMenu ? learningMenuScore(studentName) : null;
+  return progressCategories.reduce((acc, category) => {
+    const factors = [];
+    if (category === "Vocabulary") factors.push(dailyVocabularyScore(studentName));
+    factors.push(Number(teacher[category] || 0));
+    if (settings.includeLearningMenu && learning !== null) factors.push(learning);
+    acc[category] = Math.round(factors.reduce((sum, value) => sum + value, 0) / factors.length);
+    return acc;
+  }, {});
+}
+
+function calculateOverallProgress(studentName) {
+  const scores = calculateCategoryScores(studentName);
+  const overall = Math.round(progressCategories.reduce((sum, category) => sum + scores[category], 0) / progressCategories.length);
+  return { scores, overall, level: scoreToLevel(overall) };
 }
 
 function safeGet(key, fallback) {
@@ -873,12 +937,12 @@ function AdminPortal({ onBack, logout }) {
           <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
             <div className="grid gap-6">
               <StudentDashboard student={selectedStudent} quiz={quiz} quizState={quizState} totalPoints={totalPoints} answerWeeklyQuiz={() => {}} />
-              <StudentInfo student={selectedStudent} quiz={quiz} quizState={quizState} answerWeeklyQuiz={() => {}} />
+              <StudentInfo student={selectedStudent} quiz={quiz} quizState={quizState} answerWeeklyQuiz={() => {}} adminMode />
             </div>
             <div className="grid gap-6">
               <StudentSchedule student={selectedStudent} />
-              <ParentsInfo student={selectedStudent} />
-              <ProgressInfo student={selectedStudent} totalPoints={totalPoints} />
+              <ParentsInfo student={selectedStudent} adminMode />
+              <ProgressInfo student={selectedStudent} totalPoints={totalPoints} adminMode />
               <LearningMenu student={selectedStudent} adminMode />
             </div>
           </div>
@@ -1122,16 +1186,27 @@ function LearningMenu({ student, adminMode = false }) {
   const score = tasks.reduce((sum, task, index) => sum + (answers[index] === task.correct ? 1 : 0), 0);
   const passMark = selectedMode === "normal" ? 8 : 4;
   const maxScore = selectedMode === "normal" ? questionsPerPuzzle : 5;
+  const resultKey = selectedPuzzle ? (selectedMode === "normal" ? `${selectedLevel}-${selectedPuzzle}` : `${selectedBonusType}-${selectedLevel}-${selectedPuzzle}`) : null;
+  const storedAnswers = resultKey ? (selectedMode === "normal" ? progress.answers?.[resultKey] : bonusProgress.answers?.[resultKey]) : null;
 
   const finishPuzzle = () => {
+    const answerDetails = tasks.map((task, index) => ({
+      number: index + 1,
+      type: task.type,
+      question: task.q,
+      selected: answers[index] || "Не отвечено",
+      correctAnswer: task.correct,
+      isCorrect: answers[index] === task.correct,
+      explanation: task.explanation,
+    }));
     setSubmitted(true);
     if (student === adminUsername) return;
-    if (selectedMode === "normal" && score >= 8) {
-      const next = completeLearningPuzzle(student, selectedLevel, selectedPuzzle, score);
+    if (selectedMode === "normal") {
+      const next = completeLearningPuzzle(student, selectedLevel, selectedPuzzle, score, answerDetails);
       setProgress(next);
     }
-    if (selectedMode === "bonus" && score >= 4) {
-      const nextBonus = completeBonus(student, selectedBonusType, selectedLevel, selectedPuzzle, score);
+    if (selectedMode === "bonus") {
+      const nextBonus = completeBonus(student, selectedBonusType, selectedLevel, selectedPuzzle, score, answerDetails);
       setBonusProgress(nextBonus);
     }
   };
@@ -1170,6 +1245,7 @@ function LearningMenu({ student, adminMode = false }) {
             const selected = answers[index];
             const wrong = submitted && selected && selected !== task.correct;
             const correct = submitted && selected === task.correct;
+            const stored = storedAnswers?.[index];
             return (
               <div key={`${task.q}-${index}`} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
                 <div className="mb-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-black text-violet-800 shadow-sm">{index + 1}. {task.type}</div>
@@ -1189,6 +1265,12 @@ function LearningMenu({ student, adminMode = false }) {
                   </button>
                 )}
                 {(wrong || revealedAnswers[index]) && <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 ring-1 ring-red-100">Правильный ответ: {task.correct}. {task.explanation}</div>}
+                {adminMode && stored && (
+                  <div className={`mt-4 rounded-2xl p-4 text-sm font-bold ring-1 ${stored.isCorrect ? "bg-emerald-50 text-emerald-800 ring-emerald-100" : "bg-red-50 text-red-700 ring-red-100"}`}>
+                    Ответ ученика: {stored.selected} • {stored.isCorrect ? "правильно" : `неправильно, правильный ответ: ${stored.correctAnswer}`}<br />
+                    Объяснение: {stored.explanation}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -1242,7 +1324,9 @@ function LearningMenu({ student, adminMode = false }) {
       <div className="mb-6 grid gap-3 sm:grid-cols-7">
         {learningLevels.map((level) => {
           const unlocked = adminMode || student === adminUsername || learningLevels.indexOf(level) <= learningLevels.indexOf(progress.unlockedLevel || "A0");
-          return <button key={level} onClick={() => setSelectedLevel(level)} disabled={!unlocked} className={`rounded-2xl px-4 py-3 font-black ring-1 transition ${selectedLevel === level ? "bg-slate-950 text-white ring-slate-950" : unlocked ? "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50" : "bg-slate-100 text-slate-400 ring-slate-100"}`}>{level}</button>;
+          const completedLevel = selectedMode === "normal" ? isLearningLevelCompleted(progress, level) : isBonusLevelCompleted(bonusProgress, selectedBonusType, level);
+          const levelLabel = adminMode || student === adminUsername ? `${completedLevel ? "🏆" : "🔒"} ${level}` : `${unlocked ? "" : "🔒 "}${level}`;
+          return <button key={level} onClick={() => setSelectedLevel(level)} disabled={!unlocked} className={`rounded-2xl px-4 py-3 font-black ring-1 transition ${selectedLevel === level ? "bg-slate-950 text-white ring-slate-950" : unlocked ? "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50" : "bg-slate-100 text-slate-400 ring-slate-100"}`}>{levelLabel}</button>;
         })}
       </div>
 
@@ -1251,7 +1335,7 @@ function LearningMenu({ student, adminMode = false }) {
           {Array.from({ length: puzzlesPerLevel }, (_, i) => i + 1).map((number) => {
             const key = `${selectedLevel}-${number}`;
             const unlocked = isLearningPuzzleUnlocked(student, selectedLevel, number, adminMode || student === adminUsername);
-            const completed = Boolean(progress.completed?.[key]) || adminMode || student === adminUsername;
+            const completed = Boolean(progress.completed?.[key]);
             const score = progress.scores?.[key];
             return (
               <button key={key} onClick={() => openPuzzle(selectedLevel, number)} disabled={!unlocked} title={score !== undefined ? `${score}/10` : ""} className={`rounded-xl p-2 text-sm font-black ring-1 transition ${completed ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : unlocked ? "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50" : "bg-slate-100 text-slate-400 ring-slate-100"}`}>{number}</button>
@@ -1267,7 +1351,7 @@ function LearningMenu({ student, adminMode = false }) {
             {Array.from({ length: bonusPerLevel }, (_, i) => i + 1).map((number) => {
               const key = `${selectedBonusType}-${selectedLevel}-${number}`;
               const unlocked = isBonusUnlocked(student, selectedBonusType, selectedLevel, number, adminMode || student === adminUsername);
-              const completed = Boolean(bonusProgress.completed?.[key]) || adminMode || student === adminUsername;
+              const completed = Boolean(bonusProgress.completed?.[key]);
               const score = bonusProgress.scores?.[key];
               return (
                 <button key={key} onClick={() => openBonus(selectedBonusType, selectedLevel, number)} disabled={!unlocked} title={score !== undefined ? `${score}/5` : ""} className={`rounded-xl p-2 text-sm font-black ring-1 transition ${completed ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : unlocked ? "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50" : "bg-slate-100 text-slate-400 ring-slate-100"}`}>{number}</button>
@@ -1312,17 +1396,19 @@ function StudentLogin({ name, setName, password, setPassword, error, login, onBa
 
 function StudentDashboard({ student, quiz, quizState, totalPoints, answerWeeklyQuiz }) {
   const nextLesson = lessonSchedule[student]?.[0] || "Будет добавлено позже";
+  const wordStats = getWordStats(student);
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="grid gap-6">
         <Card className="p-6">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-4">
             <Stat title="Следующий урок" value={nextLesson} icon="clock" />
             <Stat title="Баллы" value={`${totalPoints}`} icon="trophy" />
+            <Stat title="Выучено слов" value={`${wordStats.correct}`} icon="star" />
             <Stat title="Язык" value={germanStudents.includes(student) ? "Deutsch" : "English"} icon="book" />
           </div>
         </Card>
-        <WeeklyWord quiz={quiz} quizState={quizState} answerWeeklyQuiz={answerWeeklyQuiz} />
+        <WeeklyWord student={student} quiz={quiz} quizState={quizState} answerWeeklyQuiz={answerWeeklyQuiz} />
       </div>
       <Card className="p-6">
         <h2 className="text-2xl font-black">Что важно на этой неделе</h2>
@@ -1338,7 +1424,8 @@ function Stat({ title, value, icon }) {
   return <div className="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-100"><div className="text-2xl"><Icon name={icon} /></div><div className="mt-2 text-sm font-bold text-slate-500">{title}</div><div className="mt-1 font-black text-slate-950">{value}</div></div>;
 }
 
-function WeeklyWord({ quiz, quizState, answerWeeklyQuiz }) {
+function WeeklyWord({ student, quiz, quizState, answerWeeklyQuiz }) {
+  const wordStats = student ? getWordStats(student) : { correct: 0, wrong: 0 };
   return (
     <div className="rounded-[1.75rem] bg-gradient-to-br from-cyan-50 via-white to-yellow-50 p-6 ring-1 ring-cyan-100">
       <div className="mb-3 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Слово дня • обновляется каждый день в 00:00 • уровень {quiz.level}</div>
@@ -1350,42 +1437,95 @@ function WeeklyWord({ quiz, quizState, answerWeeklyQuiz }) {
         ))}
       </div>
       {quizState?.answered && <div className={`mt-5 rounded-2xl p-4 font-black ${quizState.correct ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{quizState.correct ? "Правильно! +10 баллов." : `Неправильно. Правильный ответ: ${quiz.answer}.`}</div>}
-      <div className="mt-4 rounded-2xl bg-white p-4 font-bold text-slate-700 shadow-sm">Пример: {quiz.example}</div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl bg-white p-4 font-bold text-slate-700 shadow-sm">Пример: {quiz.example}</div>
+        <div className="rounded-2xl bg-violet-50 p-4 font-black text-violet-800 ring-1 ring-violet-100">Всего выучено слов: {wordStats.correct}</div>
+      </div>
     </div>
   );
 }
 
-function StudentInfo({ student, quiz, quizState, answerWeeklyQuiz }) {
+function StudentInfo({ student, quiz, quizState, answerWeeklyQuiz, adminMode = false }) {
+  const [content, setContent] = useState(getStudentContent(student));
+
+  const updateContent = (field, value) => {
+    const next = { ...content, [field]: value };
+    setContent(next);
+    saveStudentContent(student, next);
+  };
+
+  const studentItems = [
+    ["homework", "Домашнее задание", content.homework],
+    ["materials", "Miro и материалы", content.materials],
+    ["goal", "Актуальная цель", content.goal],
+    ["revision", "Повторение", content.revision],
+  ];
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-      <WeeklyWord quiz={quiz} quizState={quizState} answerWeeklyQuiz={answerWeeklyQuiz} />
+      <WeeklyWord student={student} quiz={quiz} quizState={quizState} answerWeeklyQuiz={answerWeeklyQuiz} />
       <Card className="p-6">
         <h2 className="text-3xl font-black">Материалы и задания</h2>
+        <p className="mt-2 leading-7 text-slate-600">Этот раздел Anastasia может обновлять в админ-профиле.</p>
         <div className="mt-6 grid gap-4">
-          {[
-            ["Домашнее задание", "Будет добавлено после урока. Статус: ожидает обновления."],
-            ["Miro-доска", "Здесь можно разместить индивидуальную ссылку на Miro."],
-            ["Цель", "Короткая цель на ближайшие занятия будет добавлена здесь."],
-            ["Повторение", "Повторить слова дня и примеры из урока."],
-          ].map(([title, text]) => <div key={title} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100"><h3 className="text-xl font-black">{title}</h3><p className="mt-2 leading-7 text-slate-600">{text}</p></div>)}
+          {studentItems.map(([field, title, text]) => (
+            <div key={field} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+              <h3 className="text-xl font-black">{title}</h3>
+              {adminMode ? (
+                <textarea
+                  rows={3}
+                  value={text}
+                  onChange={(e) => updateContent(field, e.target.value)}
+                  className="mt-3 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                />
+              ) : (
+                <p className="mt-2 leading-7 text-slate-600">{text}</p>
+              )}
+            </div>
+          ))}
         </div>
       </Card>
     </div>
   );
 }
 
-function ParentsInfo({ student }) {
+function ParentsInfo({ student, adminMode = false }) {
+  const [content, setContent] = useState(getStudentContent(student));
+
+  const updateContent = (field, value) => {
+    const next = { ...content, [field]: value };
+    setContent(next);
+    saveStudentContent(student, next);
+  };
+
+  const parentItems = [
+    ["parentProgress", "Прогресс", content.parentProgress],
+    ["parentAttendance", "Посещаемость", content.parentAttendance],
+    ["parentPayment", "Оплата", content.parentPayment],
+    ["parentRecommendations", "Рекомендации", content.parentRecommendations],
+  ];
+
   return (
     <Card className="p-8">
       <div className="mb-4 inline-flex rounded-full bg-yellow-100 px-4 py-2 text-sm font-black text-orange-800">Для родителей • {student}</div>
-      <h2 className="text-3xl font-black">Краткая информация</h2>
+      <h2 className="text-3xl font-black">Информация для родителей</h2>
+      <p className="mt-2 leading-7 text-slate-600">Anastasia может редактировать эти тексты в админ-профиле ученика.</p>
       <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {[
-          ["Прогресс", "Здесь можно фиксировать прогресс ученика: грамматика, лексика, чтение, говорение."],
-          ["Посещаемость", "Информация о прошедших и запланированных уроках."],
-          ["Оплата", "Здесь можно добавить статус оплаты и выбранный формат занятий."],
-          ["Рекомендации", "Короткие рекомендации для поддержки обучения дома."],
-        ].map(([title, text]) => <div key={title} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100"><h3 className="text-xl font-black">{title}</h3><p className="mt-2 leading-7 text-slate-600">{text}</p></div>)}
+        {parentItems.map(([field, title, text]) => (
+          <div key={field} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+            <h3 className="text-xl font-black">{title}</h3>
+            {adminMode ? (
+              <textarea
+                rows={3}
+                value={text}
+                onChange={(e) => updateContent(field, e.target.value)}
+                className="mt-3 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+              />
+            ) : (
+              <p className="mt-2 leading-7 text-slate-600">{text}</p>
+            )}
+          </div>
+        ))}
       </div>
     </Card>
   );
@@ -1406,17 +1546,123 @@ function StudentSchedule({ student }) {
   );
 }
 
-function ProgressInfo({ student, totalPoints }) {
-  const skills = germanStudents.includes(student) ? ["Артикли", "Падежи", "Порядок слов", "Говорение"] : ["Vocabulary", "Grammar", "Speaking", "Listening"];
+function ProgressInfo({ student, totalPoints, adminMode = false }) {
+  const [settings, setSettings] = useState(getProgressSettings(student));
+  const [previousLevel, setPreviousLevel] = useState(() => safeGet(`last-progress-level-${student}`, "A0"));
+  const { scores, overall, level } = calculateOverallProgress(student);
+  const showCongrats = levelIndex(level) > levelIndex(previousLevel);
+
+  useEffect(() => {
+    if (showCongrats) {
+      safeSet(`last-progress-level-${student}`, level);
+      setPreviousLevel(level);
+    }
+  }, [showCongrats, level, student]);
+
+  const updateTeacherAssessment = (category, value) => {
+    const next = {
+      ...settings,
+      teacherAssessment: {
+        ...(settings.teacherAssessment || {}),
+        [category]: Number(value),
+      },
+    };
+    setSettings(next);
+    saveProgressSettings(student, next);
+  };
+
+  const toggleLearningMenu = () => {
+    const next = { ...settings, includeLearningMenu: !settings.includeLearningMenu };
+    setSettings(next);
+    saveProgressSettings(student, next);
+  };
+
+  const wordStats = getWordStats(student);
+  const learningScore = learningMenuScore(student);
+
   return (
     <Card className="p-8">
       <div className="mb-4 inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Прогресс • {student}</div>
-      <h2 className="text-3xl font-black">Учебный прогресс</h2>
-      <p className="mt-3 leading-7 text-slate-600">Этот раздел можно использовать для регулярной обратной связи после уроков.</p>
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {skills.map((skill, i) => <div key={skill} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100"><div className="flex justify-between font-black"><span>{skill}</span><span>{45 + i * 10}%</span></div><div className="mt-3 h-3 rounded-full bg-white"><div className="h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${45 + i * 10}%` }} /></div></div>)}
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_0.95fr]">
+        <div>
+          <h2 className="text-3xl font-black">Учебный прогресс</h2>
+          <p className="mt-3 leading-7 text-slate-600">Общий результат состоит из четырёх категорий: словарный запас, грамматика, говорение и аудирование. Каждая категория даёт 25% общего результата.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-[0.7fr_1.3fr]">
+          <div className="rounded-3xl bg-slate-950 p-5 text-white">
+            <div className="text-sm font-bold text-white/60">Общий результат</div>
+            <div className="text-4xl font-black">{overall}%</div>
+            <div className="mt-1 text-xl font-black text-yellow-300">{level}</div>
+          </div>
+          <div className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+            <div className="mb-3 text-sm font-black text-slate-600">Список достижений по уровням</div>
+            <div className="grid gap-2">
+              {[...progressLevelRanges].reverse().map(([levelName, min, max]) => {
+                const current = level === levelName;
+                const achieved = overall >= min;
+                return (
+                  <div key={levelName} className={`flex items-center justify-between rounded-2xl px-3 py-2 text-sm font-black ring-1 ${current ? "bg-yellow-100 text-orange-900 ring-yellow-200" : achieved ? "bg-emerald-50 text-emerald-800 ring-emerald-100" : "bg-white text-slate-500 ring-slate-100"}`}>
+                    <span>{achieved ? "🏆" : "🔒"} {levelName}</span>
+                    <span>{min}–{max}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="mt-6 rounded-3xl bg-yellow-50 p-5 font-black text-orange-800 ring-1 ring-yellow-100">Всего баллов за слова дня: {totalPoints}</div>
+
+      {showCongrats && (
+        <div className="mt-6 rounded-[1.75rem] bg-gradient-to-r from-yellow-200 to-orange-200 p-5 text-center font-black text-orange-900 ring-1 ring-yellow-300">
+          🎉 Поздравляем! Новый уровень: {level}! Так держать — это отличный прогресс!
+        </div>
+      )}
+
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
+        {progressCategories.map((category) => (
+          <div key={category} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+            <div className="flex justify-between font-black"><span>{progressCategoryLabels[category]}</span><span>{scores[category]}%</span></div>
+            <div className="mt-3 h-3 rounded-full bg-white"><div className="h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${scores[category]}%` }} /></div>
+            <div className="mt-3 text-sm font-bold text-slate-500">Уровень: {scoreToLevel(scores[category])}</div>
+            {adminMode && (
+              <label className="mt-4 grid gap-2 text-sm font-bold text-slate-700">
+                Оценка Anastasia: {settings.teacherAssessment?.[category] || 0}%
+                <input type="range" min="0" max="100" value={settings.teacherAssessment?.[category] || 0} onChange={(e) => updateTeacherAssessment(category, e.target.value)} />
+              </label>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <div className="rounded-3xl bg-yellow-50 p-5 font-bold text-orange-800 ring-1 ring-yellow-100">
+          Слова дня: правильно {wordStats.correct} • неправильно {wordStats.wrong} • фактор словарного запаса по текущему уровню {dailyVocabularyScore(student)}%
+        </div>
+        <div className="rounded-3xl bg-cyan-50 p-5 font-bold text-cyan-800 ring-1 ring-cyan-100">
+          Фактор учебного меню по текущему открытому уровню: {learningScore}% {settings.includeLearningMenu ? "• активно" : "• выключено"}
+        </div>
+        <div className="rounded-3xl bg-violet-50 p-5 font-bold text-violet-800 ring-1 ring-violet-100">
+          Всего баллов за слова дня: {totalPoints}
+        </div>
+      </div>
+
+      {adminMode && (
+        <div className="mt-6 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-black">Учитывать учебное меню в прогрессе</h3>
+              <p className="mt-1 text-sm font-semibold text-slate-500">По умолчанию выключено. Anastasia может включить этот фактор отдельно для каждого ученика.</p>
+            </div>
+            <button onClick={toggleLearningMenu} className={`rounded-2xl px-5 py-3 font-black ${settings.includeLearningMenu ? "bg-emerald-100 text-emerald-800" : "bg-slate-950 text-white"}`}>
+              {settings.includeLearningMenu ? "Включено" : "Выключено"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 rounded-3xl bg-slate-50 p-5 text-sm font-bold leading-7 text-slate-700 ring-1 ring-slate-100">
+        Текущий уровень подсвечен жёлтым, уже достигнутые уровни отмечены кубком. Следующая цель — перейти в следующий процентный диапазон.
+      </div>
     </Card>
   );
 }
