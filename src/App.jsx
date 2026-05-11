@@ -54,6 +54,8 @@ const accounts = {
   Katya: "katya2026",
   Amelia: "amelia2026",
   Denis: "denis2026",
+  Liebling: "liebling2026",
+  Artjom: "artjom2026",
   BesteLehrerin: "08.08.Eins!",
 };
 
@@ -67,11 +69,14 @@ const learningPasswords = {
   Katya: "learn-katya-2026",
   Amelia: "learn-amelia-2026",
   Denis: "learn-denis-2026",
+  Liebling: "learn-liebling-2026",
+  Artjom: "learn-artjom-2026",
 };
 
 const adminUsername = "BesteLehrerin";
 const students = Object.keys(accounts).filter((name) => name !== adminUsername);
 const germanStudents = ["Sonja", "Vanja"];
+const bilingualStudents = ["Liebling", "Artjom"];
 
 const lessonSchedule = {
   Max: ["Saturday, 20:30–21:30"],
@@ -83,6 +88,8 @@ const lessonSchedule = {
   Katya: [],
   Amelia: [],
   Denis: ["Monday, 18:00–19:00", "Wednesday, 18:00–19:00", "Friday, 18:00–19:00"],
+  Liebling: [],
+  Artjom: [],
 };
 
 const hourlyRates = {
@@ -94,6 +101,8 @@ const hourlyRates = {
   Sonja: 500,
   Polina: 800,
   Denis: 1000,
+  Liebling: 0,
+  Artjom: 0,
 };
 
 const scheduleByDay = [
@@ -229,6 +238,11 @@ normalizeLearningBank();
 function getLearningLanguage(studentName) {
   if (studentName === adminUsername) return "en";
   return germanStudents.includes(studentName) ? "de" : "en";
+}
+
+function getStudentLanguageLabel(studentName) {
+  if (bilingualStudents.includes(studentName)) return "Deutsch & English";
+  return germanStudents.includes(studentName) ? "Deutsch" : "English";
 }
 
 function getLearningProgress(studentName) {
@@ -543,6 +557,47 @@ function getWordStats(studentName) {
   return safeGet(`word-stats-${studentName}`, { correct: 0, wrong: 0, unanswered: 0, streak: 0, level: "A0" });
 }
 
+function getMonthKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getTournament(monthKey = getMonthKey()) {
+  return safeGet(`daily-word-tournament-${monthKey}`, { participants: {}, usedNames: {}, points: {} });
+}
+
+function saveTournament(data, monthKey = getMonthKey()) {
+  safeSet(`daily-word-tournament-${monthKey}`, data);
+}
+
+function registerTournamentName(studentName, nickname) {
+  const clean = nickname.trim();
+  if (!clean) return { ok: false, message: "Введите имя для турнира." };
+  const tournament = getTournament();
+  const usedBy = tournament.usedNames?.[clean.toLowerCase()];
+  if (usedBy && usedBy !== studentName) return { ok: false, message: "Это имя уже занято. Выберите другое." };
+  const previous = tournament.participants?.[studentName];
+  const next = {
+    ...tournament,
+    participants: { ...(tournament.participants || {}), [studentName]: clean },
+    usedNames: { ...(tournament.usedNames || {}) },
+    points: { ...(tournament.points || {}), [studentName]: tournament.points?.[studentName] || 0 },
+  };
+  if (previous) delete next.usedNames[previous.toLowerCase()];
+  next.usedNames[clean.toLowerCase()] = studentName;
+  saveTournament(next);
+  return { ok: true, message: "Вы зарегистрированы в турнире." };
+}
+
+function addTournamentPoints(studentName, points) {
+  const tournament = getTournament();
+  if (!tournament.participants?.[studentName]) return;
+  const next = {
+    ...tournament,
+    points: { ...(tournament.points || {}), [studentName]: (tournament.points?.[studentName] || 0) + points },
+  };
+  saveTournament(next);
+}
+
 const progressCategories = ["Vocabulary", "Grammar", "Speaking", "Listening"];
 const progressCategoryLabels = {
   Vocabulary: "Словарный запас",
@@ -750,7 +805,7 @@ function StudentPortal({ onBack }) {
   const quiz = student && student !== adminUsername ? getDailyQuiz(student) : null;
   const totalPoints = student ? safeGet(`points-${student}`, 0) : 0;
   const isAdmin = student === adminUsername;
-  const language = student && (isAdmin ? "Admin" : germanStudents.includes(student) ? "Deutsch" : "English");
+  const language = student && (isAdmin ? "Admin" : getStudentLanguageLabel(student));
 
   const login = () => {
     const cleanName = name.trim();
@@ -802,7 +857,10 @@ function StudentPortal({ onBack }) {
     safeSet(`daily-word-${quiz.id}`, nextState);
     safeSet(`word-stats-${student}`, nextStats);
     safeSet(`word-level-${student}`, nextStats.level);
-    if (correct) safeSet(`points-${student}`, totalPoints + 10);
+    if (correct) {
+      safeSet(`points-${student}`, totalPoints + 10);
+      addTournamentPoints(student, 10);
+    }
     setQuizState(nextState);
   };
 
@@ -980,7 +1038,7 @@ function AdminPortal({ onBack, logout }) {
               <p className="mt-2 leading-7 text-slate-600">Нажмите на ученика, чтобы открыть его полный профиль.</p>
               <div className="mt-6 grid gap-4">
                 {students.map((name) => {
-                  const lang = germanStudents.includes(name) ? "Deutsch" : "English";
+                  const lang = getStudentLanguageLabel(name);
                   const points = safeGet(`points-${name}`, 0);
                   const wordStats = getWordStats(name);
                   const todayQuiz = getDailyQuiz(name);
@@ -1394,6 +1452,84 @@ function StudentLogin({ name, setName, password, setPassword, error, login, onBa
   );
 }
 
+function TournamentWidget({ student, adminMode = false }) {
+  const [tournament, setTournament] = useState(getTournament());
+  const [nickname, setNickname] = useState(tournament.participants?.[student] || "");
+  const [message, setMessage] = useState("");
+  const monthKey = getMonthKey();
+  const leaderboard = Object.entries(tournament.participants || {})
+    .map(([studentName, name]) => ({ studentName, name, points: tournament.points?.[studentName] || 0 }))
+    .sort((a, b) => b.points - a.points);
+
+  const register = () => {
+    const result = registerTournamentName(student, nickname);
+    setMessage(result.message);
+    setTournament(getTournament());
+  };
+
+  return (
+    <Card className="p-6">
+      <div className="mb-4 inline-flex rounded-full bg-yellow-100 px-4 py-2 text-sm font-black text-orange-800">Ежемесячный турнир Daily Word • {monthKey}</div>
+      <h2 className="text-3xl font-black">Турнир слов дня</h2>
+      <p className="mt-2 leading-7 text-slate-600">Ученики могут участвовать независимо от языка. За правильный ответ в Daily Word начисляется 10 турнирных баллов.</p>
+      {!adminMode && (
+        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <input value={nickname} onChange={(e) => setNickname(e.target.value)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Ваш уникальный турнирный ник" />
+          <button onClick={register} className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white">Участвовать</button>
+        </div>
+      )}
+      {message && <div className="mt-3 rounded-2xl bg-cyan-50 p-3 text-sm font-black text-cyan-800 ring-1 ring-cyan-100">{message}</div>}
+      <div className="mt-6 grid gap-3">
+        {leaderboard.length ? leaderboard.map((item, index) => (
+          <div key={item.studentName} className={`flex items-center justify-between rounded-2xl p-4 font-black ring-1 ${item.studentName === student ? "bg-yellow-50 text-orange-900 ring-yellow-200" : "bg-slate-50 text-slate-700 ring-slate-100"}`}>
+            <span>{index + 1}. {item.name}</span>
+            <span>{item.points} баллов</span>
+          </div>
+        )) : <div className="rounded-2xl bg-slate-50 p-4 font-bold text-slate-600 ring-1 ring-slate-100">Пока никто не зарегистрировался.</div>}
+      </div>
+    </Card>
+  );
+}
+
+function ChatWindow({ student, channel, adminMode = false }) {
+  const title = channel === "student" ? "Чат ученика" : "Чат родителей";
+  const storageKey = `chat-${student}-${channel}`;
+  const [messages, setMessages] = useState(safeGet(storageKey, []));
+  const [text, setText] = useState("");
+
+  const send = () => {
+    const clean = text.trim();
+    if (!clean) return;
+    const next = [...messages, {
+      author: adminMode ? "Anastasia" : channel === "student" ? student : "Родитель",
+      role: adminMode ? "admin" : channel,
+      text: clean,
+      time: new Date().toLocaleString("ru-RU"),
+    }];
+    setMessages(next);
+    safeSet(storageKey, next);
+    setText("");
+  };
+
+  return (
+    <Card className="p-6">
+      <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">{title} • {student}</div>
+      <div className="max-h-72 overflow-y-auto rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-100">
+        {messages.length ? messages.map((msg, index) => (
+          <div key={index} className={`mb-3 rounded-2xl p-3 ${msg.role === "admin" ? "bg-violet-100 text-violet-900" : "bg-white text-slate-700"}`}>
+            <div className="text-xs font-black opacity-70">{msg.author} • {msg.time}</div>
+            <div className="mt-1 font-semibold leading-6">{msg.text}</div>
+          </div>
+        )) : <div className="text-sm font-bold text-slate-500">Сообщений пока нет.</div>}
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Написать сообщение Anastasia..." />
+        <button onClick={send} className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white">Отправить</button>
+      </div>
+    </Card>
+  );
+}
+
 function StudentDashboard({ student, quiz, quizState, totalPoints, answerWeeklyQuiz }) {
   const nextLesson = lessonSchedule[student]?.[0] || "Будет добавлено позже";
   const wordStats = getWordStats(student);
@@ -1405,10 +1541,11 @@ function StudentDashboard({ student, quiz, quizState, totalPoints, answerWeeklyQ
             <Stat title="Следующий урок" value={nextLesson} icon="clock" />
             <Stat title="Баллы" value={`${totalPoints}`} icon="trophy" />
             <Stat title="Выучено слов" value={`${wordStats.correct}`} icon="star" />
-            <Stat title="Язык" value={germanStudents.includes(student) ? "Deutsch" : "English"} icon="book" />
+            <Stat title="Язык" value={getStudentLanguageLabel(student)} icon="book" />
           </div>
         </Card>
         <WeeklyWord student={student} quiz={quiz} quizState={quizState} answerWeeklyQuiz={answerWeeklyQuiz} />
+        <TournamentWidget student={student} />
       </div>
       <Card className="p-6">
         <h2 className="text-2xl font-black">Что важно на этой неделе</h2>
@@ -1485,6 +1622,9 @@ function StudentInfo({ student, quiz, quizState, answerWeeklyQuiz, adminMode = f
           ))}
         </div>
       </Card>
+      <div className="lg:col-span-2">
+        <ChatWindow student={student} channel="student" adminMode={adminMode} />
+      </div>
     </div>
   );
 }
@@ -1526,6 +1666,9 @@ function ParentsInfo({ student, adminMode = false }) {
             )}
           </div>
         ))}
+      </div>
+      <div className="mt-6">
+        <ChatWindow student={student} channel="parent" adminMode={adminMode} />
       </div>
     </Card>
   );
