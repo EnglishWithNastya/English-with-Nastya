@@ -57,6 +57,18 @@ const accounts = {
   BesteLehrerin: "08.08.Eins!",
 };
 
+const learningPasswords = {
+  Max: "learn-max-2026",
+  Masha: "learn-masha-2026",
+  Polina: "learn-polina-2026",
+  Igor: "learn-igor-2026",
+  Sonja: "learn-sonja-2026",
+  Vanja: "learn-vanja-2026",
+  Katya: "learn-katya-2026",
+  Amelia: "learn-amelia-2026",
+  Denis: "learn-denis-2026",
+};
+
 const adminUsername = "BesteLehrerin";
 const students = Object.keys(accounts).filter((name) => name !== adminUsername);
 const germanStudents = ["Sonja", "Vanja"];
@@ -157,6 +169,128 @@ const dailyWords = {
 };
 
 const wordLevels = ["A0", "A1", "A2", "B1", "B2", "C1", "C2"];
+const learningLevels = ["A0", "A1", "A2", "B1", "B2", "C1", "C2"];
+const puzzlesPerLevel = 100;
+const questionsPerPuzzle = 10;
+
+const learningTaskBank = {
+  en: {
+    A0: {
+      words: [["apple", "яблоко"], ["water", "вода"], ["book", "книга"], ["home", "дом"], ["school", "школа"], ["mother", "мама"], ["day", "день"], ["bag", "сумка"], ["milk", "молоко"], ["street", "улица"]],
+      grammar: [["I ___ Max.", "am", ["am", "is", "are", "be"], "После I используется форма am: I am Max."], ["She ___ a student.", "is", ["is", "are", "am", "be"], "С he/she/it используется is."], ["They ___ friends.", "are", ["are", "is", "am", "be"], "С they используется are."], ["This is ___ book.", "a", ["a", "an", "the", "-"], "Перед согласным звуком обычно используется a."], ["___ you ready?", "Are", ["Are", "Is", "Am", "Be"], "В вопросе с you используется Are."], ["I have ___ apple.", "an", ["an", "a", "the", "-"], "Перед гласным звуком используется an."], ["He ___ not here.", "is", ["is", "are", "am", "be"], "He is not here — правильная форма."], ["We ___ at home.", "are", ["are", "is", "am", "be"], "С we используется are."], ["It is ___ pen.", "a", ["a", "an", "the", "-"], "Pen начинается с согласного звука, поэтому a."], ["My name ___ Anna.", "is", ["is", "are", "am", "be"], "My name is — устойчивый базовый шаблон."]],
+      reading: [["Tom has a cat. The cat is black. What animal does Tom have?", "cat", ["cat", "dog", "bird", "fish"], "В тексте сказано: Tom has a cat."], ["Anna drinks water. What does Anna drink?", "water", ["water", "tea", "milk", "coffee"], "В тексте сказано: Anna drinks water."], ["This is my bag. It is blue. What color is the bag?", "blue", ["blue", "red", "green", "white"], "В тексте сказано: It is blue."], ["I go to school. Where do I go?", "school", ["school", "shop", "park", "bank"], "В тексте сказано: I go to school."], ["My mother is at home. Who is at home?", "mother", ["mother", "father", "teacher", "friend"], "В тексте сказано: My mother is at home."]]
+    },
+    A1: {
+      words: [["breakfast", "завтрак"], ["umbrella", "зонт"], ["window", "окно"], ["lesson", "урок"], ["teacher", "учитель"], ["family", "семья"], ["city", "город"], ["ticket", "билет"], ["phone", "телефон"], ["evening", "вечер"]],
+      grammar: [["I ___ coffee every morning.", "drink", ["drink", "drinks", "drinking", "drank"], "В Present Simple с I используется базовая форма: I drink."], ["She ___ English.", "speaks", ["speaks", "speak", "speaking", "spoke"], "С she в Present Simple добавляется -s."], ["We ___ TV yesterday.", "watched", ["watched", "watch", "watches", "watching"], "Yesterday указывает на Past Simple: watched."], ["There ___ two books.", "are", ["are", "is", "am", "be"], "С множественным числом используется there are."], ["I don't ___ meat.", "eat", ["eat", "eats", "ate", "eating"], "После don't используется базовая форма глагола."], ["Does he ___ football?", "play", ["play", "plays", "played", "playing"], "После does используется базовая форма."], ["She is ___ than me.", "taller", ["taller", "tall", "tallest", "more tall"], "Сравнительная степень: taller."], ["I can ___.", "swim", ["swim", "swims", "swam", "swimming"], "После can используется базовая форма глагола."], ["We are ___ now.", "studying", ["studying", "study", "studied", "studies"], "Now часто требует Present Continuous."], ["I need ___ help.", "some", ["some", "any", "many", "few"], "В утвердительном предложении обычно some."]],
+      reading: [["Maria works in a small shop. She starts at nine. Where does Maria work?", "shop", ["shop", "school", "hospital", "airport"], "В тексте сказано: works in a small shop."], ["Ben has breakfast at home and then takes the bus. What does he take?", "bus", ["bus", "taxi", "train", "bike"], "В тексте сказано: takes the bus."], ["Kate is tired because she studied all evening. Why is Kate tired?", "she studied", ["she studied", "she ran", "she cooked", "she travelled"], "В тексте указана причина: because she studied."], ["Alex buys a ticket for the museum. Where is he going?", "museum", ["museum", "cinema", "bank", "office"], "Он покупает билет в museum."], ["The lesson starts at five. When does the lesson start?", "at five", ["at five", "at nine", "in the morning", "on Sunday"], "В тексте сказано: starts at five."]]
+    },
+    A2: {
+      words: [["homework", "домашнее задание"], ["wallet", "кошелёк"], ["appointment", "встреча / запись"], ["neighbour", "сосед"], ["receipt", "чек"], ["schedule", "расписание"], ["queue", "очередь"], ["medicine", "лекарство"], ["entrance", "вход"], ["receipt", "чек"]],
+      grammar: [["I have lived here ___ 2020.", "since", ["since", "for", "from", "during"], "Since используется с начальной точкой во времени."], ["She has worked here ___ three years.", "for", ["for", "since", "from", "while"], "For используется с периодом времени."], ["If it rains, we ___ stay home.", "will", ["will", "would", "did", "are"], "Первый тип условных: If + Present, will + verb."], ["This book is ___ interesting than that one.", "more", ["more", "most", "much", "many"], "Для long adjectives используется more."], ["I was cooking when he ___.", "called", ["called", "calls", "calling", "call"], "Past Continuous + Past Simple для действия, которое прервало процесс."], ["You ___ smoke here.", "mustn't", ["mustn't", "don't have to", "should", "can"], "Mustn't означает запрет."], ["I haven't finished it ___.", "yet", ["yet", "already", "still", "ever"], "Yet часто используется в отрицаниях Present Perfect."], ["Have you ___ been to London?", "ever", ["ever", "yet", "since", "for"], "Ever используется в вопросах об опыте."], ["The train is late, ___?", "isn't it", ["isn't it", "is it", "doesn't it", "wasn't he"], "Question tag согласуется с is: isn't it."], ["She asked me where I ___.", "lived", ["lived", "live", "am living", "will live"], "Косвенный вопрос часто требует сдвига времени."]],
+      reading: [["Nina has an appointment at the clinic at 3 p.m. She leaves home early because the bus is often late. Why does Nina leave early?", "the bus is often late", ["the bus is often late", "she wants coffee", "the clinic is closed", "she lost her wallet"], "Причина указана после because."], ["Oleg bought a jacket but kept the receipt. He might return it tomorrow. Why did he keep the receipt?", "to return the jacket", ["to return the jacket", "to buy food", "to call a friend", "to check the weather"], "Receipt нужен, если он might return it."], ["Anna checked the schedule before leaving for the station. What did she check?", "schedule", ["schedule", "wallet", "medicine", "neighbour"], "В тексте сказано: checked the schedule."], ["The queue was long, so Max bought the tickets online. Why did Max buy tickets online?", "the queue was long", ["the queue was long", "he was hungry", "it was raining", "he forgot his phone"], "So показывает следствие длинной очереди."], ["Lena took medicine after dinner because she had a headache. Why did she take medicine?", "headache", ["headache", "appointment", "homework", "receipt"], "В тексте сказано: because she had a headache."]]
+    },
+    B1: {
+      words: [["commute", "дорога на работу / учёбу"], ["errand", "поручение / бытовое дело"], ["leftovers", "остатки еды"], ["household chores", "домашние обязанности"], ["refund", "возврат денег"], ["shortcut", "короткий путь"], ["deadline", "срок сдачи"], ["appointment", "запись / встреча"], ["groceries", "продукты"], ["rent", "аренда"]],
+      grammar: [["If I had more time, I ___ learn another language.", "would", ["would", "will", "can", "am"], "Второй тип условных: If + Past Simple, would + verb."], ["The report ___ yesterday.", "was written", ["was written", "wrote", "is write", "has wrote"], "Пассив в Past Simple: was/were + V3."], ["I look forward to ___ you.", "seeing", ["seeing", "see", "saw", "seen"], "После look forward to используется -ing."], ["She suggested ___ earlier.", "leaving", ["leaving", "to leave", "left", "leave"], "После suggest используется герундий."], ["I wish I ___ more free time.", "had", ["had", "have", "will have", "am having"], "После I wish для нереального настоящего используется Past Simple."], ["He is used to ___ early.", "getting up", ["getting up", "get up", "got up", "gets up"], "Be used to требует noun/gerund."], ["Neither answer ___ correct.", "is", ["is", "are", "be", "were"], "Neither в значении 'ни один' обычно singular."], ["She told me she ___ busy.", "was", ["was", "is", "will be", "be"], "Reported speech: is → was."], ["I had my phone ___.", "repaired", ["repaired", "repair", "repairing", "repairs"], "Have something done: had + object + V3."], ["The film was worth ___.", "watching", ["watching", "watch", "watched", "to watch"], "Worth требует -ing."]],
+      reading: [["Masha usually takes a shortcut through the park, but today it was closed, so her commute took longer. Why was her commute longer?", "the shortcut was closed", ["the shortcut was closed", "she missed breakfast", "she lost her receipt", "she worked from home"], "Причина: shortcut through the park was closed."], ["Igor had several errands to run after work: buying groceries, picking up medicine and paying rent. Which task is not mentioned?", "calling a neighbour", ["calling a neighbour", "buying groceries", "picking up medicine", "paying rent"], "В тексте нет calling a neighbour."], ["Polina missed the deadline because she underestimated the task. What caused the problem?", "she underestimated the task", ["she underestimated the task", "she had no internet", "she forgot her wallet", "she took a shortcut"], "Because указывает причину."], ["Denis asked for a refund after the headphones stopped working. Why did he ask for a refund?", "the headphones stopped working", ["the headphones stopped working", "he lost the box", "he liked the colour", "he needed groceries"], "Refund связан с тем, что товар перестал работать."], ["Sonja cooked too much, so she put the leftovers in the fridge. What did she put in the fridge?", "leftovers", ["leftovers", "rent", "deadline", "shortcut"], "В тексте сказано: put the leftovers in the fridge."]]
+    },
+    B2: {
+      words: [["maintenance", "техническое обслуживание"], ["housewarming", "новоселье"], ["commuter", "человек, ездящий на работу"], ["overdue", "просроченный"], ["appliance", "бытовой прибор"], ["storage", "хранение"], ["subscription", "подписка"], ["notice", "уведомление"], ["landlord", "арендодатель"], ["tenant", "арендатор"]],
+      grammar: [["Had I known, I ___ earlier.", "would have left", ["would have left", "would leave", "left", "will leave"], "Инверсия в third conditional: Had I known = If I had known."], ["The issue needs ___ immediately.", "to be fixed", ["to be fixed", "fix", "fixed", "fixing by"], "Need + passive infinitive: needs to be fixed."], ["Not only ___ late, but he also forgot the documents.", "was he", ["was he", "he was", "is he", "he is"], "После Not only в начале предложения используется инверсия."], ["The more you practise, ___ you become.", "the more confident", ["the more confident", "more confident", "most confident", "the confident"], "Конструкция: The more..., the more..."], ["It is high time we ___.", "left", ["left", "leave", "will leave", "are leaving"], "После It's high time часто используется Past Simple."], ["She denied ___ the message.", "having received", ["having received", "to receive", "receive", "has received"], "Deny может использоваться с perfect gerund."], ["This is the person ___ car was damaged.", "whose", ["whose", "which", "who", "whom"], "Whose выражает принадлежность."], ["The meeting was postponed, ___ caused some confusion.", "which", ["which", "what", "that", "who"], "Which относится ко всей предыдущей ситуации."], ["He is unlikely ___ on time.", "to arrive", ["to arrive", "arrive", "arriving", "arrived"], "Be unlikely + to infinitive."], ["The flat, ___ is near the station, is expensive.", "which", ["which", "that", "what", "who"], "В non-defining relative clause используется which."]],
+      reading: [["The landlord sent a notice about maintenance work in the building. Tenants were asked not to use the lift between 9 and 12. What was restricted?", "using the lift", ["using the lift", "paying rent", "buying appliances", "renewing a subscription"], "В notice сказано: not to use the lift."], ["The subscription was overdue because the payment card had expired. Why was it overdue?", "the card had expired", ["the card had expired", "the landlord called", "the lift was broken", "the tenant moved"], "Because указывает причину."], ["After the housewarming party, there was not enough storage space for the new appliances. What problem appeared?", "not enough storage space", ["not enough storage space", "overdue rent", "no commuters", "a broken subscription"], "Проблема: not enough storage space."], ["The tenant complained that maintenance had been delayed twice. What did the tenant complain about?", "delayed maintenance", ["delayed maintenance", "a new housewarming", "a cheap appliance", "a short commute"], "В тексте сказано maintenance had been delayed."], ["Many commuters prefer the early train because it is less crowded. Why do they prefer it?", "it is less crowded", ["it is less crowded", "it is overdue", "it has storage", "it is a notice"], "Because it is less crowded."]]
+    },
+    C1: { words: [["clutter", "беспорядок / хлам"], ["downtime", "время простоя / отдыха"], ["trade-off", "компромисс"], ["setback", "неудача / шаг назад"], ["workload", "рабочая нагрузка"], ["feasible", "осуществимый"], ["upkeep", "содержание / уход"], ["hassle", "морока"], ["constraint", "ограничение"], ["priority", "приоритет"]], grammar: [], reading: [] },
+    C2: { words: [["makeshift", "временный / самодельный"], ["tedious", "утомительный"], ["meticulous", "тщательный"], ["procrastinate", "откладывать на потом"], ["convoluted", "запутанный"], ["pragmatic", "прагматичный"], ["inconvenience", "неудобство"], ["resilient", "устойчивый"], ["frugal", "экономный"], ["mundane", "повседневный / обыденный"]], grammar: [], reading: [] }
+  },
+  de: {
+    A0: { words: [["das Wasser", "вода"], ["das Buch", "книга"], ["das Haus", "дом"], ["die Schule", "школа"], ["der Tag", "день"], ["die Tasche", "сумка"], ["die Milch", "молоко"], ["die Straße", "улица"], ["die Mutter", "мама"], ["das Fenster", "окно"]], grammar: [["Ich ___ Max.", "bin", ["bin", "bist", "ist", "sind"], "С ich используется bin."], ["Du ___ nett.", "bist", ["bist", "bin", "ist", "seid"], "С du используется bist."], ["Er ___ hier.", "ist", ["ist", "bist", "bin", "sind"], "С er/sie/es используется ist."], ["Wir ___ Schüler.", "sind", ["sind", "seid", "ist", "bin"], "С wir используется sind."], ["Das ist ___ Buch.", "ein", ["ein", "eine", "einen", "einem"], "Buch — das, поэтому ein Buch."], ["Das ist ___ Tasche.", "eine", ["eine", "ein", "einen", "einem"], "Tasche — die, поэтому eine Tasche."], ["Ich ___ Wasser.", "trinke", ["trinke", "trinkt", "trinken", "trinkst"], "С ich: trinke."], ["Er ___ Deutsch.", "lernt", ["lernt", "lerne", "lernen", "lernst"], "С er: lernt."], ["___ du hier?", "Bist", ["Bist", "Bin", "Ist", "Sind"], "Вопрос с du: Bist du...?"], ["Ich habe ___ Tasche.", "eine", ["eine", "ein", "einen", "einem"], "Tasche — feminine, Akkusativ eine."]], reading: [["Anna hat ein Buch. Was hat Anna?", "Buch", ["Buch", "Tasche", "Wasser", "Fenster"], "В тексте сказано: Anna hat ein Buch."], ["Max trinkt Wasser. Was trinkt Max?", "Wasser", ["Wasser", "Milch", "Tee", "Kaffee"], "В тексте сказано: Max trinkt Wasser."], ["Das Haus ist groß. Wie ist das Haus?", "groß", ["groß", "klein", "rot", "alt"], "В тексте сказано: ist groß."], ["Ich gehe zur Schule. Wohin gehe ich?", "Schule", ["Schule", "Bank", "Park", "Kino"], "В тексте сказано: zur Schule."], ["Die Tasche ist blau. Welche Farbe hat die Tasche?", "blau", ["blau", "rot", "weiß", "grün"], "В тексте сказано: blau."]] },
+    A1: { words: [["das Frühstück", "завтрак"], ["der Regenschirm", "зонт"], ["der Lehrer", "учитель"], ["die Familie", "семья"], ["die Stadt", "город"], ["die Fahrkarte", "билет"], ["das Handy", "телефон"], ["der Abend", "вечер"], ["der Unterricht", "урок"], ["die Frage", "вопрос"]], grammar: [], reading: [] },
+    A2: { words: [["die Hausaufgabe", "домашнее задание"], ["die Geldbörse", "кошелёк"], ["der Termin", "встреча / запись"], ["der Nachbar", "сосед"], ["die Quittung", "чек"], ["der Stundenplan", "расписание"], ["die Schlange", "очередь"], ["das Medikament", "лекарство"], ["der Eingang", "вход"], ["der Ausgang", "выход"]], grammar: [], reading: [] },
+    B1: { words: [["der Arbeitsweg", "дорога на работу / учёбу"], ["die Besorgung", "поручение / бытовое дело"], ["die Essensreste", "остатки еды"], ["die Hausarbeit", "домашние обязанности"], ["die Rückerstattung", "возврат денег"], ["die Abkürzung", "короткий путь"], ["die Frist", "срок сдачи"], ["die Miete", "аренда"], ["die Lebensmittel", "продукты"], ["der Alltag", "повседневность"]], grammar: [], reading: [] },
+    B2: { words: [["die Wartung", "техническое обслуживание"], ["die Einweihungsfeier", "новоселье"], ["der Pendler", "человек, ездящий на работу"], ["überfällig", "просроченный"], ["das Haushaltsgerät", "бытовой прибор"], ["die Aufbewahrung", "хранение"], ["das Abonnement", "подписка"], ["die Mitteilung", "уведомление"], ["der Vermieter", "арендодатель"], ["der Mieter", "арендатор"]], grammar: [], reading: [] },
+    C1: { words: [["die Unordnung", "беспорядок"], ["die Auszeit", "время отдыха"], ["der Kompromiss", "компромисс"], ["der Rückschlag", "неудача"], ["die Arbeitsbelastung", "рабочая нагрузка"], ["machbar", "осуществимый"], ["die Instandhaltung", "содержание / уход"], ["der Aufwand", "хлопоты / затраты усилий"], ["die Einschränkung", "ограничение"], ["die Priorität", "приоритет"]], grammar: [], reading: [] },
+    C2: { words: [["provisorisch", "временный / самодельный"], ["mühsam", "утомительный"], ["sorgfältig", "тщательный"], ["aufschieben", "откладывать"], ["verworren", "запутанный"], ["pragmatisch", "прагматичный"], ["die Unannehmlichkeit", "неудобство"], ["belastbar", "устойчивый"], ["sparsam", "экономный"], ["alltäglich", "повседневный"]], grammar: [], reading: [] }
+  }
+};
+
+function normalizeLearningBank() {
+  ["en", "de"].forEach((lang) => {
+    learningLevels.forEach((level, idx) => {
+      const bank = learningTaskBank[lang][level];
+      const fallbackLevel = idx > 0 ? learningTaskBank[lang][learningLevels[idx - 1]] : learningTaskBank[lang].A0;
+      if (!bank.grammar.length) bank.grammar = fallbackLevel.grammar;
+      if (!bank.reading.length) bank.reading = fallbackLevel.reading;
+    });
+  });
+}
+normalizeLearningBank();
+
+function getLearningLanguage(studentName) {
+  if (studentName === adminUsername) return "en";
+  return germanStudents.includes(studentName) ? "de" : "en";
+}
+
+function getLearningProgress(studentName) {
+  return safeGet(`learning-progress-${studentName}`, { unlockedLevel: "A0", completed: {}, scores: {} });
+}
+
+function saveLearningProgress(studentName, progress) {
+  safeSet(`learning-progress-${studentName}`, progress);
+}
+
+function makeOptions(correct, pool) {
+  const unique = [correct, ...pool.filter((item) => item !== correct)].filter((item, index, arr) => arr.indexOf(item) === index);
+  return unique.slice(0, 4).sort((a, b) => String(a).localeCompare(String(b)));
+}
+
+function isLearningPuzzleUnlocked(studentName, level, puzzleNumber, adminMode = false) {
+  if (adminMode) return true;
+  const progress = getLearningProgress(studentName);
+  const unlockedLevelIndex = learningLevels.indexOf(progress.unlockedLevel || "A0");
+  const levelIndex = learningLevels.indexOf(level);
+  if (levelIndex < unlockedLevelIndex) return true;
+  if (levelIndex > unlockedLevelIndex) return false;
+  if (puzzleNumber === 1) return true;
+  return Boolean(progress.completed?.[`${level}-${puzzleNumber - 1}`]);
+}
+
+function generateLearningPuzzle(studentName, level, puzzleNumber, adminMode = false, languageOverride = null) {
+  const lang = languageOverride || (adminMode && studentName === adminUsername ? "en" : getLearningLanguage(studentName));
+  const bank = learningTaskBank[lang][level] || learningTaskBank[lang].A0;
+  const tasks = [];
+  for (let i = 0; i < questionsPerPuzzle; i += 1) {
+    const type = i % 3 === 0 ? "reading" : i % 3 === 1 ? "grammar" : "word";
+    if (type === "word") {
+      const item = bank.words[(puzzleNumber + i) % bank.words.length];
+      const wrongPool = bank.words.map((entry) => entry[1]).filter((answer) => answer !== item[1]);
+      tasks.push({ type: "Слова", q: lang === "en" ? `What does “${item[0]}” mean?` : `Что означает «${item[0]}»?`, correct: item[1], options: makeOptions(item[1], wrongPool), explanation: `Правильный ответ: ${item[0]} — ${item[1]}.` });
+    } else if (type === "grammar") {
+      const item = bank.grammar[(puzzleNumber + i) % bank.grammar.length];
+      tasks.push({ type: "Грамматика", q: item[0], correct: item[1], options: item[2], explanation: item[3] });
+    } else {
+      const item = bank.reading[(puzzleNumber + i) % bank.reading.length];
+      tasks.push({ type: "Чтение", q: item[0], correct: item[1], options: item[2], explanation: item[3] });
+    }
+  }
+  return tasks;
+}
+
+function completeLearningPuzzle(studentName, level, puzzleNumber, score) {
+  const progress = getLearningProgress(studentName);
+  const key = `${level}-${puzzleNumber}`;
+  const next = {
+    ...progress,
+    completed: { ...(progress.completed || {}), [key]: score >= 8 },
+    scores: { ...(progress.scores || {}), [key]: score },
+  };
+  if (score >= 8 && puzzleNumber >= puzzlesPerLevel) {
+    const levelIndex = learningLevels.indexOf(level);
+    next.unlockedLevel = learningLevels[Math.min(learningLevels.length - 1, levelIndex + 1)];
+  }
+  saveLearningProgress(studentName, next);
+  return next;
+}
 
 const site = {
   en: {
@@ -470,12 +604,13 @@ function StudentPortal({ onBack }) {
           </div>
         </div>
 
-        <div className="mb-6 grid gap-3 md:grid-cols-5">
+        <div className="mb-6 grid gap-3 md:grid-cols-6">
           {[
             ["dashboard", "Обзор", "home"],
             ["student", "Для ученика", "user"],
             ["parents", "Для родителей", "parent"],
             ["schedule", "Учебный план", "calendar"],
+            ["learning", "Учебное меню", "book"],
             ["progress", "Прогресс", "chart"],
           ].map(([id, label, icon]) => (
             <button key={id} onClick={() => setView(id)} className={`rounded-2xl p-4 text-left font-black shadow-sm ring-1 transition ${view === id ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}><Icon name={icon} /> {label}</button>
@@ -486,6 +621,7 @@ function StudentPortal({ onBack }) {
         {view === "student" && <StudentInfo student={student} quiz={quiz} quizState={quizState} answerWeeklyQuiz={answerWeeklyQuiz} />}
         {view === "parents" && <ParentsInfo student={student} />}
         {view === "schedule" && <StudentSchedule student={student} />}
+        {view === "learning" && <LearningMenu student={student} />}
         {view === "progress" && <ProgressInfo student={student} totalPoints={totalPoints} />}
       </div>
     </div>
@@ -582,6 +718,7 @@ function AdminPortal({ onBack, logout }) {
               <StudentSchedule student={selectedStudent} />
               <ParentsInfo student={selectedStudent} />
               <ProgressInfo student={selectedStudent} totalPoints={totalPoints} />
+              <LearningMenu student={selectedStudent} adminMode />
             </div>
           </div>
         </div>
@@ -605,8 +742,8 @@ function AdminPortal({ onBack, logout }) {
           </div>
         </div>
 
-        <div className="mb-6 grid gap-3 md:grid-cols-4">
-          {[["overview", "Ученики", "👥"], ["calendar", "Календарь посещаемости", "📅"], ["revenue", "Доход", "₽"], ["stats", "Статистика", "📊"]].map(([id, label, icon]) => (
+        <div className="mb-6 grid gap-3 md:grid-cols-5">
+          {[["overview", "Ученики", "👥"], ["calendar", "Календарь посещаемости", "📅"], ["revenue", "Доход", "₽"], ["learning", "Учебные меню", "📚"], ["stats", "Статистика", "📊"]].map(([id, label, icon]) => (
             <button key={id} onClick={() => setAdminView(id)} className={`rounded-2xl p-4 text-left font-black shadow-sm ring-1 transition ${adminView === id ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{icon} {label}</button>
           ))}
         </div>
@@ -705,6 +842,30 @@ function AdminPortal({ onBack, logout }) {
           </div>
         )}
 
+        {adminView === "learning" && (
+          <div className="grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
+            <Card className="p-6">
+              <h2 className="text-3xl font-black">Учебные меню учеников</h2>
+              <p className="mt-2 leading-7 text-slate-600">Anastasia может открыть учебное меню любого ученика. Для неё все уровни и все 100 заданий открыты.</p>
+              <div className="mt-6 grid gap-3">
+                {students.map((name) => {
+                  const progress = getLearningProgress(name);
+                  const completedCount = Object.values(progress.completed || {}).filter(Boolean).length;
+                  return (
+                    <button key={name} onClick={() => setSelectedStudent(name)} className="rounded-3xl bg-slate-50 p-5 text-left ring-1 ring-slate-100 transition hover:bg-cyan-50">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div><h3 className="text-2xl font-black">{name}</h3><p className="text-sm font-bold text-slate-500">Открытый уровень: {progress.unlockedLevel || "A0"} • завершено: {completedCount}</p></div>
+                        <span className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Открыть профиль</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+            <LearningMenu student={adminUsername} adminMode />
+          </div>
+        )}
+
         {adminView === "stats" && (
           <Card className="p-6">
             <h2 className="text-3xl font-black">Статистика пропусков и переносов</h2>
@@ -732,6 +893,154 @@ function AdminPortal({ onBack, logout }) {
         )}
       </div>
     </div>
+  );
+}
+
+function LearningMenu({ student, adminMode = false }) {
+  const [access, setAccess] = useState(adminMode || student === adminUsername);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [progress, setProgress] = useState(getLearningProgress(student));
+  const [selectedLevel, setSelectedLevel] = useState("A0");
+  const [selectedPuzzle, setSelectedPuzzle] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [adminLearningLanguage, setAdminLearningLanguage] = useState("en");
+  const [revealedAnswers, setRevealedAnswers] = useState({});
+
+  const activeLearningLanguage = adminMode && student === adminUsername ? adminLearningLanguage : getLearningLanguage(student);
+
+  const completedCount = Object.values(progress.completed || {}).filter(Boolean).length;
+
+  const enterLearningMenu = () => {
+    if (adminMode || student === adminUsername || learningPasswords[student] === password) {
+      setAccess(true);
+      setError("");
+      setPassword("");
+    } else {
+      setError("Неверный пароль для учебного меню.");
+    }
+  };
+
+  const openPuzzle = (level, puzzleNumber) => {
+    if (!isLearningPuzzleUnlocked(student, level, puzzleNumber, adminMode || student === adminUsername)) return;
+    setSelectedLevel(level);
+    setSelectedPuzzle(puzzleNumber);
+    setAnswers({});
+    setSubmitted(false);
+    setRevealedAnswers({});
+  };
+
+  const tasks = selectedPuzzle ? generateLearningPuzzle(student, selectedLevel, selectedPuzzle, adminMode || student === adminUsername, activeLearningLanguage) : [];
+  const score = tasks.reduce((sum, task, index) => sum + (answers[index] === task.correct ? 1 : 0), 0);
+
+  const finishPuzzle = () => {
+    setSubmitted(true);
+    if (score >= 8 && student !== adminUsername) {
+      const next = completeLearningPuzzle(student, selectedLevel, selectedPuzzle, score);
+      setProgress(next);
+    }
+  };
+
+  if (!access) {
+    return (
+      <Card className="p-8">
+        <div className="mb-4 inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Защищённое учебное меню</div>
+        <h2 className="text-3xl font-black">Введите отдельный пароль</h2>
+        <p className="mt-3 leading-7 text-slate-600">Это не пароль от личного кабинета. Для учебного меню используется отдельный пароль.</p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto]">
+          <input value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enterLearningMenu()} type="password" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Пароль учебного меню" />
+          <button onClick={enterLearningMenu} className="rounded-2xl bg-slate-950 px-6 py-3 font-black text-white">Открыть</button>
+        </div>
+        {error && <div className="mt-4 rounded-2xl bg-red-50 p-4 font-bold text-red-700 ring-1 ring-red-100">{error}</div>}
+      </Card>
+    );
+  }
+
+  if (selectedPuzzle) {
+    return (
+      <Card className="p-6">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div><div className="inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">{selectedLevel} • Задание {selectedPuzzle} / {puzzlesPerLevel}</div><h2 className="mt-3 text-3xl font-black">Учебное меню: {student}</h2></div>
+          <button onClick={() => { setSelectedPuzzle(null); setSubmitted(false); setAnswers({}); setRevealedAnswers({}); }} className="rounded-2xl bg-white px-4 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← Назад к заданиям</button>
+        </div>
+
+        <div className="grid gap-4">
+          {tasks.map((task, index) => {
+            const selected = answers[index];
+            const wrong = submitted && selected && selected !== task.correct;
+            const correct = submitted && selected === task.correct;
+            return (
+              <div key={`${task.q}-${index}`} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+                <div className="mb-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-black text-violet-800 shadow-sm">{index + 1}. {task.type}</div>
+                <h3 className="text-lg font-black leading-7 text-slate-950">{task.q}</h3>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {task.options.map((option) => (
+                    <button key={option} disabled={submitted} onClick={() => setAnswers({ ...answers, [index]: option })} className={`rounded-2xl p-3 text-left font-bold ring-1 transition ${correct && option === selected ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : wrong && option === selected ? "bg-red-50 text-red-700 ring-red-200" : submitted && option === task.correct ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : selected === option ? "bg-cyan-50 text-cyan-800 ring-cyan-200" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{option}</button>
+                  ))}
+                </div>
+                {adminMode && (
+                  <button
+                    type="button"
+                    onClick={() => setRevealedAnswers({ ...revealedAnswers, [index]: !revealedAnswers[index] })}
+                    className="mt-4 rounded-2xl bg-violet-100 px-4 py-3 text-sm font-black text-violet-800 ring-1 ring-violet-200"
+                  >
+                    {revealedAnswers[index] ? "Скрыть ответ" : "Показать ответ и объяснение"}
+                  </button>
+                )}
+                {(wrong || revealedAnswers[index]) && <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 ring-1 ring-red-100">Правильный ответ: {task.correct}. {task.explanation}</div>}
+              </div>
+            );
+          })}
+        </div>
+
+        {!submitted ? (
+          <button onClick={finishPuzzle} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-orange-400 to-yellow-400 px-6 py-4 font-black text-slate-950 shadow-lg">Проверить результат</button>
+        ) : (
+          <div className={`mt-6 rounded-[1.75rem] p-6 font-black ${score >= 8 ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100" : "bg-red-50 text-red-700 ring-1 ring-red-100"}`}>
+            Результат: {score} / {questionsPerPuzzle}. {score >= 8 ? "Задание выполнено, следующее задание открыто." : "Нужно минимум 8 правильных ответов. Повторите задание."}
+          </div>
+        )}
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-6">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div><div className="inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Учебное меню • {student}</div><h2 className="mt-3 text-3xl font-black">Уровни A0–C2 и 100 заданий на уровень</h2><p className="mt-2 leading-7 text-slate-600">Каждое задание содержит 10 вопросов: чтение, грамматика и слова. Для открытия следующего задания нужно минимум 8 из 10.</p></div>
+        <div className="rounded-3xl bg-yellow-50 p-4 text-sm font-black text-orange-800 ring-1 ring-yellow-100">Завершено: {completedCount}</div>
+      </div>
+
+      {adminMode && student === adminUsername && (
+        <div className="mb-6 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-100">
+          <div className="mb-3 text-sm font-black text-slate-600">Язык учебного меню Anastasia</div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button onClick={() => { setAdminLearningLanguage("en"); setSelectedPuzzle(null); }} className={`rounded-2xl px-4 py-3 font-black ring-1 ${adminLearningLanguage === "en" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100"}`}>Английские уровни A0–C2</button>
+            <button onClick={() => { setAdminLearningLanguage("de"); setSelectedPuzzle(null); }} className={`rounded-2xl px-4 py-3 font-black ring-1 ${adminLearningLanguage === "de" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100"}`}>Немецкие уровни A0–C2</button>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-6 grid gap-3 sm:grid-cols-7">
+        {learningLevels.map((level) => {
+          const unlocked = adminMode || student === adminUsername || learningLevels.indexOf(level) <= learningLevels.indexOf(progress.unlockedLevel || "A0");
+          return <button key={level} onClick={() => setSelectedLevel(level)} disabled={!unlocked} className={`rounded-2xl px-4 py-3 font-black ring-1 transition ${selectedLevel === level ? "bg-slate-950 text-white ring-slate-950" : unlocked ? "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50" : "bg-slate-100 text-slate-400 ring-slate-100"}`}>{level}</button>;
+        })}
+      </div>
+
+      <div className="grid grid-cols-5 gap-2 sm:grid-cols-10 lg:grid-cols-20">
+        {Array.from({ length: puzzlesPerLevel }, (_, i) => i + 1).map((number) => {
+          const key = `${selectedLevel}-${number}`;
+          const unlocked = isLearningPuzzleUnlocked(student, selectedLevel, number, adminMode || student === adminUsername);
+          const completed = Boolean(progress.completed?.[key]) || adminMode || student === adminUsername;
+          const score = progress.scores?.[key];
+          return (
+            <button key={key} onClick={() => openPuzzle(selectedLevel, number)} disabled={!unlocked} title={score !== undefined ? `${score}/10` : ""} className={`rounded-xl p-2 text-sm font-black ring-1 transition ${completed ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : unlocked ? "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50" : "bg-slate-100 text-slate-400 ring-slate-100"}`}>{number}</button>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
