@@ -77,6 +77,17 @@ const adminUsername = "BesteLehrerin";
 const students = Object.keys(accounts).filter((name) => name !== adminUsername);
 const germanStudents = ["Sonja", "Vanja"];
 const bilingualStudents = ["Liebling", "Artjom"];
+const studentLanguages = {
+  Sonja: ["de"],
+  Vanja: ["de"],
+  Liebling: ["en", "de"],
+  Artjom: ["en", "de", "es"],
+};
+const languageLabels = {
+  en: "English",
+  de: "Deutsch",
+  es: "Español",
+};
 
 const lessonSchedule = {
   Max: ["Saturday, 20:30–21:30"],
@@ -175,6 +186,36 @@ const dailyWords = {
       { word: "die Hausarbeit", answer: "домашние обязанности", options: ["домашние обязанности", "приглашение", "соседство", "сдача"], example: "Hausarbeit gehört zum Alltag." },
     ],
   },
+  es: {
+    A0: [
+      { word: "agua", answer: "вода", options: ["вода", "книга", "окно", "улица"], example: "Bebo agua todos los días." },
+      { word: "libro", answer: "книга", options: ["книга", "стол", "день", "молоко"], example: "El libro es interesante." },
+    ],
+    A1: [
+      { word: "desayuno", answer: "завтрак", options: ["завтрак", "зонт", "город", "чек"], example: "Tomo el desayuno a las ocho." },
+      { word: "paraguas", answer: "зонт", options: ["зонт", "учитель", "кошелёк", "дом"], example: "Necesito un paraguas." },
+    ],
+    A2: [
+      { word: "deberes", answer: "домашнее задание", options: ["домашнее задание", "билет", "лекарство", "окно"], example: "Hago los deberes por la tarde." },
+      { word: "cartera", answer: "кошелёк", options: ["кошелёк", "сосед", "очередь", "школа"], example: "Mi cartera está en la bolsa." },
+    ],
+    B1: [
+      { word: "cita", answer: "встреча / запись", options: ["встреча / запись", "аренда", "остатки еды", "город"], example: "Tengo una cita mañana." },
+      { word: "vecino", answer: "сосед", options: ["сосед", "завтрак", "подписка", "школа"], example: "Mi vecino es amable." },
+    ],
+    B2: [
+      { word: "recibo", answer: "чек", options: ["чек", "подписка", "вход", "окно"], example: "Guarda el recibo." },
+      { word: "horario", answer: "расписание", options: ["расписание", "молоко", "дверь", "учитель"], example: "Mi horario está lleno." },
+    ],
+    C1: [
+      { word: "trayecto", answer: "дорога на работу / учёбу", options: ["дорога на работу / учёбу", "подарок", "зонт", "молоко"], example: "El trayecto dura cuarenta minutos." },
+      { word: "recado", answer: "поручение / бытовое дело", options: ["поручение / бытовое дело", "чек", "город", "лекарство"], example: "Tengo que hacer un recado." },
+    ],
+    C2: [
+      { word: "sobras", answer: "остатки еды", options: ["остатки еды", "расписание", "окно", "сосед"], example: "Comimos las sobras para cenar." },
+      { word: "quehaceres", answer: "домашние обязанности", options: ["домашние обязанности", "встреча", "подписка", "город"], example: "Los quehaceres forman parte de la vida diaria." },
+    ],
+  },
 };
 
 const wordLevels = ["A0", "A1", "A2", "B1", "B2", "C1", "C2"];
@@ -220,11 +261,24 @@ const learningTaskBank = {
     B2: { words: [["die Wartung", "техническое обслуживание"], ["die Einweihungsfeier", "новоселье"], ["der Pendler", "человек, ездящий на работу"], ["überfällig", "просроченный"], ["das Haushaltsgerät", "бытовой прибор"], ["die Aufbewahrung", "хранение"], ["das Abonnement", "подписка"], ["die Mitteilung", "уведомление"], ["der Vermieter", "арендодатель"], ["der Mieter", "арендатор"]], grammar: [], reading: [] },
     C1: { words: [["die Unordnung", "беспорядок"], ["die Auszeit", "время отдыха"], ["der Kompromiss", "компромисс"], ["der Rückschlag", "неудача"], ["die Arbeitsbelastung", "рабочая нагрузка"], ["machbar", "осуществимый"], ["die Instandhaltung", "содержание / уход"], ["der Aufwand", "хлопоты / затраты усилий"], ["die Einschränkung", "ограничение"], ["die Priorität", "приоритет"]], grammar: [], reading: [] },
     C2: { words: [["provisorisch", "временный / самодельный"], ["mühsam", "утомительный"], ["sorgfältig", "тщательный"], ["aufschieben", "откладывать"], ["verworren", "запутанный"], ["pragmatisch", "прагматичный"], ["die Unannehmlichkeit", "неудобство"], ["belastbar", "устойчивый"], ["sparsam", "экономный"], ["alltäglich", "повседневный"]], grammar: [], reading: [] }
+  },
+  es: {
+    A0: {
+      words: [["agua", "вода"], ["libro", "книга"], ["casa", "дом"], ["escuela", "школа"], ["día", "день"], ["bolsa", "сумка"], ["leche", "молоко"], ["calle", "улица"], ["madre", "мама"], ["ventana", "окно"]],
+      grammar: [["Yo ___ estudiante.", "soy", ["soy", "eres", "es", "son"], "С yo используется soy: Yo soy estudiante."], ["Tú ___ amable.", "eres", ["eres", "soy", "es", "somos"], "С tú используется eres."], ["Él ___ en casa.", "está", ["está", "estoy", "están", "estás"], "Для местоположения используется estar: él está."], ["Nosotros ___ español.", "hablamos", ["hablamos", "hablo", "habla", "hablan"], "С nosotros окончание -amos."], ["La casa ___ grande.", "es", ["es", "está", "son", "soy"], "Постоянное качество: ser, la casa es grande."], ["Tengo ___ libro.", "un", ["un", "una", "unos", "unas"], "Libro — мужской род: un libro."], ["Tengo ___ bolsa.", "una", ["una", "un", "unos", "unas"], "Bolsa — женский род: una bolsa."], ["¿Cómo te ___?", "llamas", ["llamas", "llamo", "llama", "llaman"], "Правильная фраза: ¿Cómo te llamas?"], ["Me ___ Artjom.", "llamo", ["llamo", "llamas", "llama", "llaman"], "Правильно: Me llamo..."], ["Yo ___ agua.", "bebo", ["bebo", "bebes", "bebe", "beben"], "С yo: bebo." ]],
+      reading: [["Ana tiene un libro. ¿Qué tiene Ana?", "libro", ["libro", "agua", "casa", "bolsa"], "В тексте сказано: Ana tiene un libro."], ["Max bebe agua. ¿Qué bebe Max?", "agua", ["agua", "leche", "té", "café"], "В тексте сказано: bebe agua."], ["La casa es grande. ¿Cómo es la casa?", "grande", ["grande", "pequeña", "roja", "vieja"], "В тексте сказано: es grande."], ["Voy a la escuela. ¿Adónde voy?", "escuela", ["escuela", "banco", "parque", "cine"], "В тексте сказано: a la escuela."], ["La bolsa es azul. ¿De qué color es la bolsa?", "azul", ["azul", "roja", "blanca", "verde"], "В тексте сказано: azul."]]
+    },
+    A1: { words: [["desayuno", "завтрак"], ["paraguas", "зонт"], ["profesor", "учитель"], ["familia", "семья"], ["ciudad", "город"], ["billete", "билет"], ["móvil", "телефон"], ["tarde", "вечер"], ["clase", "урок"], ["pregunta", "вопрос"]], grammar: [], reading: [] },
+    A2: { words: [["deberes", "домашнее задание"], ["cartera", "кошелёк"], ["cita", "встреча / запись"], ["vecino", "сосед"], ["recibo", "чек"], ["horario", "расписание"], ["cola", "очередь"], ["medicina", "лекарство"], ["entrada", "вход"], ["salida", "выход"]], grammar: [], reading: [] },
+    B1: { words: [["trayecto", "дорога на работу / учёбу"], ["recado", "поручение / бытовое дело"], ["sobras", "остатки еды"], ["quehaceres", "домашние обязанности"], ["reembolso", "возврат денег"], ["atajo", "короткий путь"], ["plazo", "срок сдачи"], ["alquiler", "аренда"], ["comestibles", "продукты"], ["vida cotidiana", "повседневность"]], grammar: [], reading: [] },
+    B2: { words: [["mantenimiento", "техническое обслуживание"], ["inauguración de casa", "новоселье"], ["viajero habitual", "человек, ездящий на работу"], ["vencido", "просроченный"], ["electrodoméstico", "бытовой прибор"], ["almacenamiento", "хранение"], ["suscripción", "подписка"], ["aviso", "уведомление"], ["arrendador", "арендодатель"], ["inquilino", "арендатор"]], grammar: [], reading: [] },
+    C1: { words: [["desorden", "беспорядок"], ["pausa", "время отдыха"], ["compromiso", "компромисс"], ["contratiempo", "неудача"], ["carga de trabajo", "рабочая нагрузка"], ["viable", "осуществимый"], ["mantenimiento", "содержание / уход"], ["molestia", "хлопоты"], ["restricción", "ограничение"], ["prioridad", "приоритет"]], grammar: [], reading: [] },
+    C2: { words: [["provisional", "временный / самодельный"], ["tedioso", "утомительный"], ["meticuloso", "тщательный"], ["posponer", "откладывать"], ["enrevesado", "запутанный"], ["pragmático", "прагматичный"], ["inconveniente", "неудобство"], ["resistente", "устойчивый"], ["austero", "экономный"], ["mundano", "повседневный"]], grammar: [], reading: [] }
   }
 };
 
 function normalizeLearningBank() {
-  ["en", "de"].forEach((lang) => {
+  ["en", "de", "es"].forEach((lang) => {
     learningLevels.forEach((level, idx) => {
       const bank = learningTaskBank[lang][level];
       const fallbackLevel = idx > 0 ? learningTaskBank[lang][learningLevels[idx - 1]] : learningTaskBank[lang].A0;
@@ -235,15 +289,22 @@ function normalizeLearningBank() {
 }
 normalizeLearningBank();
 
+function getStudentLanguages(studentName) {
+  return studentLanguages[studentName] || (germanStudents.includes(studentName) ? ["de"] : ["en"]);
+}
+
 function getStudentActiveLanguage(studentName) {
-  if (bilingualStudents.includes(studentName)) {
-    return safeGet(`active-language-${studentName}`, "en");
+  const languages = getStudentLanguages(studentName);
+  if (languages.length > 1) {
+    const saved = safeGet(`active-language-${studentName}`, languages[0]);
+    return languages.includes(saved) ? saved : languages[0];
   }
-  return germanStudents.includes(studentName) ? "de" : "en";
+  return languages[0];
 }
 
 function saveStudentActiveLanguage(studentName, language) {
-  if (!bilingualStudents.includes(studentName)) return;
+  const languages = getStudentLanguages(studentName);
+  if (languages.length <= 1 || !languages.includes(language)) return;
   safeSet(`active-language-${studentName}`, language);
 }
 
@@ -253,13 +314,12 @@ function getLearningLanguage(studentName) {
 }
 
 function getStudentLanguageLabel(studentName) {
-  if (bilingualStudents.includes(studentName)) return "Deutsch & English";
-  return germanStudents.includes(studentName) ? "Deutsch" : "English";
+  return getStudentLanguages(studentName).map((lang) => languageLabels[lang] || lang).join(" & ");
 }
 
 function getActiveLanguageLabel(studentName) {
   const active = getStudentActiveLanguage(studentName);
-  return active === "de" ? "Deutsch" : "English";
+  return languageLabels[active] || active;
 }
 
 function getLearningProgress(studentName) {
@@ -297,23 +357,100 @@ function isLearningPuzzleUnlocked(studentName, level, puzzleNumber, adminMode = 
   return Boolean(progress.completed?.[`${level}-${puzzleNumber - 1}`]);
 }
 
+function getStructuredLearningData(lang) {
+  const data = {
+    en: {
+      words: {
+        A0: [["water", "вода"], ["book", "книга"], ["house", "дом"], ["school", "школа"], ["day", "день"], ["bag", "сумка"], ["milk", "молоко"], ["street", "улица"], ["mother", "мама"], ["window", "окно"], ["apple", "яблоко"], ["table", "стол"], ["door", "дверь"], ["pen", "ручка"], ["cat", "кошка"]],
+        A1: [["breakfast", "завтрак"], ["umbrella", "зонт"], ["teacher", "учитель"], ["family", "семья"], ["city", "город"], ["ticket", "билет"], ["phone", "телефон"], ["evening", "вечер"], ["lesson", "урок"], ["question", "вопрос"], ["friend", "друг"], ["shop", "магазин"], ["train", "поезд"], ["weather", "погода"], ["kitchen", "кухня"]],
+        A2: [["homework", "домашнее задание"], ["wallet", "кошелёк"], ["appointment", "запись / встреча"], ["neighbour", "сосед"], ["receipt", "чек"], ["schedule", "расписание"], ["queue", "очередь"], ["medicine", "лекарство"], ["entrance", "вход"], ["exit", "выход"], ["delivery", "доставка"], ["message", "сообщение"], ["meeting", "встреча"], ["corner", "угол"], ["change", "сдача / изменение"]],
+        B1: [["commute", "дорога на работу"], ["errand", "поручение"], ["leftovers", "остатки еды"], ["household chores", "домашние обязанности"], ["refund", "возврат денег"], ["shortcut", "короткий путь"], ["deadline", "срок сдачи"], ["rent", "аренда"], ["groceries", "продукты"], ["routine", "режим / рутина"], ["complaint", "жалоба"], ["survey", "опрос"], ["delay", "задержка"], ["choice", "выбор"], ["habit", "привычка"]],
+        B2: [["maintenance", "техническое обслуживание"], ["subscription", "подписка"], ["notice", "уведомление"], ["landlord", "арендодатель"], ["tenant", "арендатор"], ["overdue", "просроченный"], ["appliance", "бытовой прибор"], ["storage", "хранение"], ["policy", "правило / политика"], ["capacity", "вместимость / способность"], ["assumption", "предположение"], ["impact", "влияние"], ["requirement", "требование"], ["availability", "доступность"], ["priority", "приоритет"]],
+        C1: [["constraint", "ограничение"], ["trade-off", "компромисс"], ["setback", "неудача"], ["workload", "рабочая нагрузка"], ["feasible", "осуществимый"], ["upkeep", "содержание / уход"], ["hassle", "морока"], ["resilience", "устойчивость"], ["accountability", "ответственность"], ["ambiguity", "двусмысленность"], ["implication", "последствие / смысл"], ["consistency", "последовательность"], ["shortcoming", "недостаток"], ["insight", "понимание / вывод"], ["approach", "подход"]],
+        C2: [["convoluted", "запутанный"], ["meticulous", "тщательный"], ["pragmatic", "прагматичный"], ["tedious", "утомительный"], ["frugal", "экономный"], ["mundane", "повседневный"], ["plausible", "правдоподобный"], ["subtle", "тонкий / едва заметный"], ["detrimental", "вредный"], ["scrutiny", "тщательное изучение"], ["coherent", "последовательный"], ["redundant", "избыточный"], ["contentious", "спорный"], ["thorough", "основательный"], ["sustainable", "устойчивый"]],
+      },
+      grammar: [
+        ["to be", ["I ___ ready.", "am", ["am", "is", "are", "be"], "С I используется am."], ["She ___ ready.", "is", ["is", "are", "am", "be"], "С he/she/it используется is."]],
+        ["present simple", ["He usually ___ tea.", "drinks", ["drink", "drinks", "drinking", "drank"], "В Present Simple с he/she/it добавляется -s."], ["They ___ English every day.", "study", ["study", "studies", "studied", "studying"], "С they используется базовая форма глагола."]],
+        ["past simple", ["Yesterday she ___ home late.", "came", ["come", "came", "comes", "coming"], "Yesterday указывает на Past Simple."], ["We ___ the film last night.", "watched", ["watch", "watched", "watches", "watching"], "Last night требует Past Simple."]],
+        ["present perfect", ["I have lived here ___ 2020.", "since", ["since", "for", "from", "during"], "Since используется с точкой начала."], ["She has worked here ___ two years.", "for", ["for", "since", "during", "from"], "For используется с периодом времени."]],
+        ["conditionals", ["If I had more time, I ___ practise more.", "would", ["would", "will", "can", "am"], "Second conditional: If + Past, would + verb."], ["If it rains, we ___ stay home.", "will", ["will", "would", "did", "are"], "First conditional: If + Present, will + verb."]],
+        ["passive", ["The report ___ yesterday.", "was written", ["was written", "wrote", "is write", "has wrote"], "Пассив Past Simple: was/were + V3."], ["The room ___ every day.", "is cleaned", ["is cleaned", "cleans", "cleaned", "clean"], "Пассив Present Simple: is/are + V3."]],
+        ["advanced", ["Not only ___ late, but he also forgot the file.", "was he", ["was he", "he was", "is he", "he is"], "После Not only в начале предложения нужна инверсия."], ["Had I known, I ___ earlier.", "would have left", ["would have left", "would leave", "left", "will leave"], "Инверсия в third conditional: Had I known..."]],
+      ],
+      readingPeople: ["Anna", "Max", "Lena", "Igor", "Masha", "Denis", "Polina", "Sonja"],
+      places: ["school", "office", "library", "station", "clinic", "language class", "supermarket", "airport"],
+      actions: ["checks the schedule", "reviews new words", "asks for directions", "keeps the receipt", "changes the appointment", "prepares a short presentation", "compares two options", "explains the problem"],
+    },
+    de: {
+      words: {
+        A0: [["das Wasser", "вода"], ["das Buch", "книга"], ["das Haus", "дом"], ["die Schule", "школа"], ["der Tag", "день"], ["die Tasche", "сумка"], ["die Milch", "молоко"], ["die Straße", "улица"], ["die Mutter", "мама"], ["das Fenster", "окно"], ["der Apfel", "яблоко"], ["der Tisch", "стол"], ["die Tür", "дверь"], ["der Stift", "ручка"], ["die Katze", "кошка"]],
+        A1: [["das Frühstück", "завтрак"], ["der Regenschirm", "зонт"], ["der Lehrer", "учитель"], ["die Familie", "семья"], ["die Stadt", "город"], ["die Fahrkarte", "билет"], ["das Handy", "телефон"], ["der Abend", "вечер"], ["der Unterricht", "урок"], ["die Frage", "вопрос"], ["der Freund", "друг"], ["das Geschäft", "магазин"], ["der Zug", "поезд"], ["das Wetter", "погода"], ["die Küche", "кухня"]],
+        A2: [["die Hausaufgabe", "домашнее задание"], ["die Geldbörse", "кошелёк"], ["der Termin", "запись / встреча"], ["der Nachbar", "сосед"], ["die Quittung", "чек"], ["der Stundenplan", "расписание"], ["die Schlange", "очередь"], ["das Medikament", "лекарство"], ["der Eingang", "вход"], ["der Ausgang", "выход"], ["die Lieferung", "доставка"], ["die Nachricht", "сообщение"], ["die Besprechung", "встреча"], ["die Ecke", "угол"], ["das Wechselgeld", "сдача"]],
+        B1: [["der Arbeitsweg", "дорога на работу"], ["die Besorgung", "поручение"], ["die Essensreste", "остатки еды"], ["die Hausarbeit", "домашние обязанности"], ["die Rückerstattung", "возврат денег"], ["die Abkürzung", "короткий путь"], ["die Frist", "срок сдачи"], ["die Miete", "аренда"], ["die Lebensmittel", "продукты"], ["die Routine", "режим / рутина"], ["die Beschwerde", "жалоба"], ["die Umfrage", "опрос"], ["die Verspätung", "задержка"], ["die Wahl", "выбор"], ["die Gewohnheit", "привычка"]],
+        B2: [["die Wartung", "техническое обслуживание"], ["das Abonnement", "подписка"], ["die Mitteilung", "уведомление"], ["der Vermieter", "арендодатель"], ["der Mieter", "арендатор"], ["überfällig", "просроченный"], ["das Haushaltsgerät", "бытовой прибор"], ["die Aufbewahrung", "хранение"], ["die Regelung", "правило"], ["die Kapazität", "вместимость / способность"], ["die Annahme", "предположение"], ["die Auswirkung", "влияние"], ["die Anforderung", "требование"], ["die Verfügbarkeit", "доступность"], ["die Priorität", "приоритет"]],
+        C1: [["die Einschränkung", "ограничение"], ["der Kompromiss", "компромисс"], ["der Rückschlag", "неудача"], ["die Arbeitsbelastung", "рабочая нагрузка"], ["machbar", "осуществимый"], ["die Instandhaltung", "содержание / уход"], ["der Aufwand", "морока / усилие"], ["die Belastbarkeit", "устойчивость"], ["die Verantwortlichkeit", "ответственность"], ["die Mehrdeutigkeit", "двусмысленность"], ["die Konsequenz", "последствие"], ["die Beständigkeit", "последовательность"], ["der Mangel", "недостаток"], ["die Einsicht", "понимание / вывод"], ["der Ansatz", "подход"]],
+        C2: [["verworren", "запутанный"], ["sorgfältig", "тщательный"], ["pragmatisch", "прагматичный"], ["mühsam", "утомительный"], ["sparsam", "экономный"], ["alltäglich", "повседневный"], ["plausibel", "правдоподобный"], ["subtil", "тонкий / едва заметный"], ["schädlich", "вредный"], ["die Prüfung", "тщательное изучение"], ["schlüssig", "последовательный"], ["überflüssig", "избыточный"], ["umstritten", "спорный"], ["gründlich", "основательный"], ["nachhaltig", "устойчивый"]],
+      },
+      grammar: [
+        ["sein", ["Ich ___ müde.", "bin", ["bin", "bist", "ist", "sind"], "С ich используется bin."], ["Du ___ hier.", "bist", ["bist", "bin", "ist", "seid"], "С du используется bist."]],
+        ["Präsens", ["Er ___ Deutsch.", "lernt", ["lernt", "lerne", "lernen", "lernst"], "С er окончание -t."], ["Wir ___ morgen.", "kommen", ["kommen", "kommt", "komme", "kommst"], "С wir используется kommen."]],
+        ["Perfekt", ["Ich ___ meine Hausaufgaben gemacht.", "habe", ["habe", "bin", "hat", "ist"], "Для machen в Perfekt используется haben."], ["Sie ___ nach Hause gegangen.", "ist", ["ist", "hat", "sind", "haben"], "Для движения часто используется sein."]],
+        ["Fälle", ["Ich helfe ___ Freund.", "dem", ["dem", "den", "der", "das"], "Helfen требует Dativ: dem Freund."], ["Ich sehe ___ Mann.", "den", ["den", "dem", "der", "das"], "Sehen требует Akkusativ: den Mann."]],
+        ["Nebensätze", ["Ich bleibe zu Hause, weil ich müde ___.", "bin", ["bin", "bist", "ist", "sind"], "В придаточном предложении глагол стоит в конце."], ["Wenn ich Zeit habe, ___ ich dich an.", "rufe", ["rufe", "anrufe", "gerufen", "rufst"], "В главном предложении после wenn глагол стоит на позиции 2."]],
+        ["Passiv", ["Der Brief ___ gestern geschrieben.", "wurde", ["wurde", "hat", "ist", "war hat"], "Passiv Präteritum: wurde + Partizip II."], ["Das Zimmer ___ jeden Tag gereinigt.", "wird", ["wird", "hat", "ist", "war"], "Passiv Präsens: wird + Partizip II."]],
+        ["advanced", ["Hätte ich das gewusst, ___ ich anders reagiert.", "hätte", ["hätte", "wäre", "würde", "hatte"], "Konjunktiv II der Vergangenheit."], ["Je mehr man übt, ___ sicherer wird man.", "desto", ["desto", "weil", "obwohl", "wenn"], "Корреляция: je..., desto..."]],
+      ],
+      readingPeople: ["Anna", "Max", "Lena", "Igor", "Masha", "Denis", "Polina", "Sonja"],
+      places: ["Schule", "Büro", "Bibliothek", "Bahnhof", "Klinik", "Sprachkurs", "Supermarkt", "Flughafen"],
+      actions: ["prüft den Stundenplan", "wiederholt neue Wörter", "fragt nach dem Weg", "behält die Quittung", "verschiebt den Termin", "bereitet eine Präsentation vor", "vergleicht zwei Optionen", "erklärt das Problem"],
+    },
+  };
+  return data[lang] || data.en;
+}
+
+function createWordQuestion(lang, level, puzzleNumber, questionIndex, globalDifficulty) {
+  const data = getStructuredLearningData(lang);
+  const levelWords = data.words[level] || data.words.A0;
+  const allAnswers = Object.values(data.words).flat().map((entry) => entry[1]);
+  const item = levelWords[(puzzleNumber * 7 + questionIndex * 3) % levelWords.length];
+  const wrongPool = allAnswers.filter((answer) => answer !== item[1]);
+  const q = lang === "de" ? `Что означает «${item[0]}»?` : `What does “${item[0]}” mean?`;
+  return { type: "Слова", q: `${q} (${level}, задание ${puzzleNumber})`, correct: item[1], options: makeOptions(item[1], wrongPool, globalDifficulty + questionIndex), explanation: `Правильный перевод: ${item[0]} — ${item[1]}.` };
+}
+
+function createGrammarQuestion(lang, level, puzzleNumber, questionIndex, globalDifficulty) {
+  const data = getStructuredLearningData(lang);
+  const maxGrammarIndex = Math.min(data.grammar.length - 1, Math.floor(globalDifficulty / 100));
+  const grammarGroup = data.grammar[(puzzleNumber + questionIndex + maxGrammarIndex) % (maxGrammarIndex + 1)];
+  const variant = grammarGroup[1 + ((puzzleNumber + questionIndex) % 2)];
+  return { type: "Грамматика", q: `${variant[0]} (${level}, грамматика ${puzzleNumber}-${questionIndex + 1})`, correct: variant[1], options: deterministicShuffle(variant[2], globalDifficulty + questionIndex * 11), explanation: variant[3] };
+}
+
+function createReadingQuestion(lang, level, puzzleNumber, questionIndex, globalDifficulty) {
+  const data = getStructuredLearningData(lang);
+  const person = data.readingPeople[(puzzleNumber + questionIndex) % data.readingPeople.length];
+  const place = data.places[(puzzleNumber * 2 + questionIndex) % data.places.length];
+  const action = data.actions[(puzzleNumber * 3 + questionIndex) % data.actions.length];
+  const text = lang === "de"
+    ? `${person} ist im ${place} und ${action}. Danach macht die Person eine kurze Notiz, weil die Aufgabe wichtig ist. Frage ${puzzleNumber}-${questionIndex + 1}: Wo ist ${person}?`
+    : `${person} is at the ${place} and ${action}. Then this person writes a short note because the task is important. Question ${puzzleNumber}-${questionIndex + 1}: Where is ${person}?`;
+  const wrongPlaces = data.places.filter((item) => item !== place);
+  return { type: "Чтение", q: text, correct: place, options: makeOptions(place, wrongPlaces, globalDifficulty + questionIndex * 17), explanation: lang === "de" ? `В тексте сказано: ${person} ist im ${place}.` : `The text says: ${person} is at the ${place}.` };
+}
+
 function generateLearningPuzzle(studentName, level, puzzleNumber, adminMode = false, languageOverride = null) {
   const lang = languageOverride || (adminMode && studentName === adminUsername ? "en" : getLearningLanguage(studentName));
-  const bank = learningTaskBank[lang][level] || learningTaskBank[lang].A0;
+  const supportedLang = lang === "de" || lang === "en" ? lang : getLearningLanguage(studentName);
+  const levelPosition = Math.max(0, learningLevels.indexOf(level));
+  const globalDifficulty = levelPosition * puzzlesPerLevel + puzzleNumber;
   const tasks = [];
   for (let i = 0; i < questionsPerPuzzle; i += 1) {
-    const type = i % 3 === 0 ? "reading" : i % 3 === 1 ? "grammar" : "word";
-    if (type === "word") {
-      const item = bank.words[(puzzleNumber + i) % bank.words.length];
-      const wrongPool = bank.words.map((entry) => entry[1]).filter((answer) => answer !== item[1]);
-      tasks.push({ type: "Слова", q: lang === "en" ? `What does “${item[0]}” mean?` : `Что означает «${item[0]}»?`, correct: item[1], options: makeOptions(item[1], wrongPool), explanation: `Правильный ответ: ${item[0]} — ${item[1]}.` });
-    } else if (type === "grammar") {
-      const item = bank.grammar[(puzzleNumber + i) % bank.grammar.length];
-      tasks.push({ type: "Грамматика", q: item[0], correct: item[1], options: item[2], explanation: item[3] });
-    } else {
-      const item = bank.reading[(puzzleNumber + i) % bank.reading.length];
-      tasks.push({ type: "Чтение", q: item[0], correct: item[1], options: item[2], explanation: item[3] });
-    }
+    const questionType = i % 3;
+    const uniqueSeed = globalDifficulty * 100 + i;
+    if (questionType === 0) tasks.push(createReadingQuestion(supportedLang, level, puzzleNumber, i, uniqueSeed));
+    else if (questionType === 1) tasks.push(createGrammarQuestion(supportedLang, level, puzzleNumber, i, uniqueSeed));
+    else tasks.push(createWordQuestion(supportedLang, level, puzzleNumber, i, uniqueSeed));
   }
   return tasks;
 }
@@ -773,6 +910,74 @@ function FAQItem({ item, index }) {
   );
 }
 
+function OtherLanguagesPage({ onHome }) {
+  const languageGroups = [
+    ["Особенно популярные", ["Китайский", "Испанский", "Французский", "Корейский", "Японский", "Турецкий", "Арабский"]],
+    ["Часто интересны в России", ["Итальянский", "Польский", "Чешский", "Сербский", "Грузинский", "Армянский", "Азербайджанский"]],
+    ["Европейские языки", ["Португальский", "Нидерландский", "Шведский", "Норвежский", "Датский", "Финский", "Греческий", "Люксембургский"]],
+    ["Другие направления", ["Хинди", "Индонезийский", "Вьетнамский", "Тайский", "Персидский", "Иврит", "Украинский"]],
+  ];
+  const prices = [
+    ["Китайский", "1000 ₽", "разовый доступ к материалам"],
+    ["Испанский", "1000 ₽", "разовый доступ к материалам"],
+    ["Французский", "1000 ₽", "разовый доступ к материалам"],
+    ["Люксембургский", "100 ₽", "разовый доступ к материалам"],
+    ["Все остальные языки", "500 ₽", "разовый доступ к материалам"],
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#f7fbff] px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
+      <BackgroundBlobs />
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Дополнительные языки</div>
+            <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Материалы для самостоятельного изучения языков</h1>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">Для этих языков нет онлайн-уроков. Вместо этого ученик получает много учебных материалов: тексты, словари, упражнения, задания на чтение, грамматику и полезные фразы для самостоятельной работы.</p>
+          </div>
+          <button onClick={onHome} className="rounded-2xl bg-white px-5 py-3 font-black text-slate-700 shadow-sm ring-1 ring-slate-100">← На главную</button>
+        </div>
+
+        <div className="mb-8 rounded-[2rem] bg-yellow-50 p-6 font-black text-orange-900 ring-1 ring-yellow-200">
+          Важно: это не онлайн-обучение с преподавателем. Это доступ к материалам, текстам, упражнениям и объяснениям, которые можно проходить самостоятельно.
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+          <Card className="p-6">
+            <h2 className="text-3xl font-black">Доступные языки</h2>
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              {languageGroups.map(([group, list]) => (
+                <div key={group} className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
+                  <h3 className="text-xl font-black text-slate-950">{group}</h3>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {list.map((language) => <span key={language} className="rounded-full bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-100">{language}</span>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="text-3xl font-black">Стоимость</h2>
+            <div className="mt-6 grid gap-4">
+              {prices.map(([language, price, text]) => (
+                <div key={language} className="rounded-3xl bg-gradient-to-br from-white to-cyan-50 p-5 ring-1 ring-slate-100">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-xl font-black">{language}</h3>
+                    <div className="rounded-2xl bg-slate-950 px-4 py-2 font-black text-white">{price}</div>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-slate-600">{text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 rounded-3xl bg-violet-50 p-5 font-bold text-violet-900 ring-1 ring-violet-100">В материалы могут входить: алфавит, произношение, базовая грамматика, темы A0–A2, тексты, карточки слов, мини-тесты и задания для повторения.</div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Home({ onChoose }) {
   return (
     <div className="min-h-screen bg-[#f7fbff] px-4 py-10 text-slate-950 sm:px-6 lg:px-8">
@@ -817,7 +1022,7 @@ function HomeChoice({ title, text, chip, onClick, icon, color }) {
   );
 }
 
-function StudentPortal({ onBack }) {
+function StudentPortal({ onBack, onOpenLanguage }) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [student, setStudent] = useState(null);
@@ -910,7 +1115,7 @@ function StudentPortal({ onBack }) {
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Вы вошли как: {student} • {language}{bilingualStudents.includes(student) ? ` • сейчас: ${activeLanguage}` : ""}</div>
+            <div className="inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Вы вошли как: {student} • {language}{getStudentLanguages(student).length > 1 ? ` • сейчас: ${activeLanguage}` : ""}</div>
             <h1 className="mt-3 text-4xl font-black text-slate-950">Личный кабинет</h1>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -919,7 +1124,7 @@ function StudentPortal({ onBack }) {
           </div>
         </div>
 
-        <div className="mb-6 grid gap-3 md:grid-cols-6">
+        <div className="mb-6 grid gap-3 md:grid-cols-7">
           {[
             ["dashboard", "Обзор", "home"],
             ["student", "Для ученика", "user"],
@@ -927,12 +1132,13 @@ function StudentPortal({ onBack }) {
             ["schedule", "Учебный план", "calendar"],
             ["learning", "Учебное меню", "book"],
             ["progress", "Прогресс", "chart"],
+            ["languages", "Другие языки", "globe"],
           ].map(([id, label, icon]) => (
             <button key={id} onClick={() => setView(id)} className={`rounded-2xl p-4 text-left font-black shadow-sm ring-1 transition ${view === id ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}><Icon name={icon} /> {label}</button>
           ))}
         </div>
 
-        {bilingualStudents.includes(student) && (
+        {getStudentLanguages(student).length > 1 && (
           <div className="mb-6">
             <LanguageSwitcher student={student} onChange={handleLanguageChange} />
           </div>
@@ -943,6 +1149,7 @@ function StudentPortal({ onBack }) {
         {view === "parents" && <ParentsInfo student={student} />}
         {view === "schedule" && <StudentSchedule student={student} />}
         {view === "learning" && <LearningMenu student={student} />}
+        {view === "languages" && <LanguageRecommendation student={student} onOpenLanguage={onOpenLanguage} />}
         {view === "progress" && <ProgressInfo student={student} totalPoints={totalPoints} />}
       </div>
     </div>
@@ -1399,7 +1606,7 @@ function LearningMenu({ student, adminMode = false }) {
         <div className="rounded-3xl bg-yellow-50 p-4 text-sm font-black text-orange-800 ring-1 ring-yellow-100">Завершено: {completedCount}</div>
       </div>
 
-      {bilingualStudents.includes(student) && !adminMode && student !== adminUsername && (
+      {getStudentLanguages(student).length > 1 && !adminMode && student !== adminUsername && (
         <div className="mb-6">
           <LanguageSwitcher student={student} onChange={handleLearningLanguageChange} />
         </div>
@@ -1411,6 +1618,19 @@ function LearningMenu({ student, adminMode = false }) {
           <div className="grid gap-3 sm:grid-cols-2">
             <button onClick={() => { setAdminLearningLanguage("en"); setSelectedPuzzle(null); }} className={`rounded-2xl px-4 py-3 font-black ring-1 ${adminLearningLanguage === "en" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100"}`}>Английские уровни A0–C2</button>
             <button onClick={() => { setAdminLearningLanguage("de"); setSelectedPuzzle(null); }} className={`rounded-2xl px-4 py-3 font-black ring-1 ${adminLearningLanguage === "de" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100"}`}>Немецкие уровни A0–C2</button>
+          </div>
+        </div>
+      )}
+
+      {activeLearningLanguage === "es" && (
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
+          <div className="rounded-3xl bg-orange-50 p-5 ring-1 ring-orange-100">
+            <h3 className="text-xl font-black text-orange-900">Произношение в испанском</h3>
+            <p className="mt-2 leading-7 text-orange-800">В испанском большинство слов читается достаточно регулярно. Важно тренировать гласные a, e, i, o, u, звук ñ, мягкое ll/y и ударение. Буква h обычно не произносится.</p>
+          </div>
+          <div className="rounded-3xl bg-cyan-50 p-5 ring-1 ring-cyan-100">
+            <h3 className="text-xl font-black text-cyan-900">Грамматика в испанском</h3>
+            <p className="mt-2 leading-7 text-cyan-800">Особое внимание уделяется ser/estar, родам существительных, артиклям el/la, спряжению глаголов и базовым временам Presente, Pretérito Perfecto и Futuro.</p>
           </div>
         </div>
       )}
@@ -1506,8 +1726,9 @@ function StudentLogin({ name, setName, password, setPassword, error, login, onBa
 }
 
 function LanguageSwitcher({ student, onChange }) {
+  const languages = getStudentLanguages(student);
   const [language, setLanguage] = useState(getStudentActiveLanguage(student));
-  if (!bilingualStudents.includes(student)) return null;
+  if (languages.length <= 1) return null;
 
   const changeLanguage = (nextLanguage) => {
     setLanguage(nextLanguage);
@@ -1517,12 +1738,13 @@ function LanguageSwitcher({ student, onChange }) {
 
   return (
     <Card className="p-6">
-      <div className="mb-4 inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Выбор языка • сейчас: {language === "de" ? "Deutsch" : "English"}</div>
+      <div className="mb-4 inline-flex rounded-full bg-violet-100 px-4 py-2 text-sm font-black text-violet-800">Выбор языка • сейчас: {languageLabels[language] || language}</div>
       <h2 className="text-2xl font-black">Выберите язык для заданий</h2>
-      <p className="mt-2 leading-7 text-slate-600">Слово дня и учебное меню открываются на выбранном языке. В турнире Daily Word баллы начисляются только один раз в день, даже если вы отвечаете на двух языках.</p>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <button onClick={() => changeLanguage("en")} className={`rounded-2xl px-5 py-4 font-black ring-1 transition ${language === "en" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>English</button>
-        <button onClick={() => changeLanguage("de")} className={`rounded-2xl px-5 py-4 font-black ring-1 transition ${language === "de" ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>Deutsch</button>
+      <p className="mt-2 leading-7 text-slate-600">Слово дня и учебное меню открываются на выбранном языке. В турнире Daily Word баллы начисляются только один раз в день, даже если вы отвечаете на нескольких языках.</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        {languages.map((lang) => (
+          <button key={lang} onClick={() => changeLanguage(lang)} className={`rounded-2xl px-5 py-4 font-black ring-1 transition ${language === lang ? "bg-slate-950 text-white ring-slate-950" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{languageLabels[lang] || lang}</button>
+        ))}
       </div>
     </Card>
   );
@@ -1601,6 +1823,32 @@ function ChatWindow({ student, channel, adminMode = false }) {
       <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
         <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Написать сообщение Anastasia..." />
         <button onClick={send} className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white">Отправить</button>
+      </div>
+    </Card>
+  );
+}
+
+function LanguageRecommendation({ student, onOpenLanguage }) {
+  const languages = getStudentLanguages(student);
+  const suggestions = [];
+  if (!languages.includes("en")) suggestions.push(["en", "Английский язык", "Лексика, грамматика, разговорная практика, путешествия и учёба."]);
+  if (!languages.includes("de")) suggestions.push(["de", "Немецкий язык", "Артикли, падежи, порядок слов, Alltag und Kommunikation."]);
+  suggestions.push(["other", "Другие языки", "Материалы, тексты и упражнения для популярных языков мира без онлайн-уроков."]);
+
+  return (
+    <Card className="p-8">
+      <div className="mb-4 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-black text-cyan-800">Другие языки • {student}</div>
+      <h2 className="text-3xl font-black">Можно изучать больше одного языка</h2>
+      <p className="mt-3 leading-7 text-slate-600">Здесь Anastasia может мягко предложить ученику другой язык. Нажатие открывает информационную страницу выбранного направления.</p>
+      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {suggestions.map(([lang, title, text]) => (
+          <button key={lang} onClick={() => onOpenLanguage && onOpenLanguage(lang)} className="rounded-[1.75rem] bg-gradient-to-br from-white to-cyan-50 p-6 text-left shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-1 hover:bg-cyan-50">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-xl font-black text-white">{lang === "de" ? "DE" : lang === "en" ? "EN" : "🌍"}</div>
+            <h3 className="text-2xl font-black text-slate-950">{title}</h3>
+            <p className="mt-3 leading-7 text-slate-600">{text}</p>
+            <div className="mt-5 rounded-2xl bg-yellow-100 px-4 py-3 text-center font-black text-orange-900">Открыть информационную страницу</div>
+          </button>
+        ))}
       </div>
     </Card>
   );
@@ -2001,6 +2249,7 @@ function LanguagePage({ type, onHome }) {
       <main id="top">
         <Hero data={data} />
         <TrustSection />
+        <CountryFactsSection type={type} />
         <AboutSection data={data} />
         <AudienceSection data={data} />
         <ProgramSection data={data} />
@@ -2037,6 +2286,68 @@ function TrustSection() {
   return <section className="px-4 py-8 sm:px-6 lg:px-8"><div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-4">{[["Опыт", "Индивидуальная работа с разными возрастами"], ["Формат", "Онлайн, удобно и структурно"], ["Материалы", "Miro, карточки, упражнения, примеры"], ["Результат", "Цель, обратная связь и контроль прогресса"]].map(([title, text]) => <Card key={title} className="p-5"><div className="text-2xl">✨</div><h3 className="mt-3 font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{text}</p></Card>)}</div></section>;
 }
 
+function CountryFactsSection({ type }) {
+  const facts = type === "de" ? {
+    title: "Немецкий язык и немецкоязычные страны",
+    text: "Немецкий открывает доступ к учёбе, работе, путешествиям и культуре Германии, Австрии и Швейцарии. На уроках мы связываем язык с реальными ситуациями: поездки, школа, быт, документы, город и общение.",
+    photos: [
+      ["Бранденбургские ворота", "Берлин, Германия", "🏛️", "from-yellow-100 via-white to-red-100", "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=1200&q=80"],
+      ["Альпы", "Австрия и Швейцария", "🏔️", "from-cyan-100 via-white to-blue-100", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80"],
+      ["Городская жизнь", "транспорт, кафе, университет", "🚋", "from-orange-100 via-white to-violet-100"],
+    ],
+    factCards: [
+      ["3 страны", "Немецкий особенно важен для Германии, Австрии и Швейцарии."],
+      ["der, die, das", "Артикли и падежи тренируются постепенно и без паники."],
+      ["Порядок слов", "Одна из ключевых тем для уверенной немецкой речи."],
+      ["Культура", "Язык помогает лучше понимать города, традиции и повседневную жизнь."],
+    ],
+  } : {
+    title: "Английский язык и англоязычный мир",
+    text: "Английский нужен для учёбы, работы, путешествий, фильмов, музыки, общения и интернета. На занятиях мы учим не абстрактные правила, а язык, который можно сразу использовать в жизни.",
+    photos: [
+      ["Лондон", "Биг-Бен и городская среда", "🇬🇧", "from-cyan-100 via-white to-blue-100", "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80"],
+      ["Путешествия", "аэропорт, отель, кафе", "✈️", "from-yellow-100 via-white to-orange-100"],
+      ["Международное общение", "учёба, работа, интернет", "🌍", "from-violet-100 via-white to-cyan-100"],
+    ],
+    factCards: [
+      ["Глобальный язык", "Английский часто используется в международной коммуникации."],
+      ["Для путешествий", "Фразы для аэропорта, отеля, транспорта и кафе дают быструю пользу."],
+      ["Для учёбы", "Помогает читать тексты, смотреть материалы и делать презентации."],
+      ["Для уверенности", "Главная цель — говорить понятнее, свободнее и спокойнее."],
+    ],
+  };
+
+  return (
+    <section className="px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <SectionHeader eyebrow="Страны и язык" title={facts.title} text={facts.text} />
+        <div className="grid gap-6 lg:grid-cols-3">
+          {facts.photos.map(([title, subtitle, icon, gradient, imageUrl]) => (
+            <Card key={title} className={`overflow-hidden bg-gradient-to-br ${gradient}`}>
+              <div className="flex h-56 items-center justify-center overflow-hidden text-7xl">
+                {imageUrl ? <img src={imageUrl} alt={title} className="h-full w-full object-cover" /> : icon}
+              </div>
+              <div className="bg-white/80 p-5 backdrop-blur">
+                <h3 className="text-xl font-black text-slate-950">{title}</h3>
+                <p className="mt-1 font-semibold text-slate-600">{subtitle}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-500">Фото помогает связать язык с реальными местами, культурой и ситуациями общения.</p>
+              </div>
+            </Card>
+          ))}
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-4">
+          {facts.factCards.map(([title, text]) => (
+            <div key={title} className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+              <h3 className="text-xl font-black text-slate-950">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function AboutSection({ data }) {
   return <section id="about" className="px-4 py-20 sm:px-6 lg:px-8"><div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.85fr_1.15fr]"><div className="relative"><div className="aspect-square rounded-[2rem] bg-gradient-to-br from-cyan-200 via-yellow-100 to-violet-200 p-6 shadow-xl"><div className="flex h-full flex-col items-center justify-center rounded-[1.5rem] border-2 border-dashed border-white/90 bg-white/65 text-center"><div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-violet-500 text-5xl text-white">😊</div><p className="mt-5 text-xl font-black">Фото Anastasia</p><p className="mt-2 max-w-xs text-sm text-slate-600">Здесь лучше разместить настоящее фото — это повышает доверие.</p></div></div><div className="absolute -bottom-5 left-8 rounded-3xl bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-lg">Ошибки — это часть обучения ✨</div></div><div><div className="mb-3 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-sm font-bold text-cyan-800">Обо мне</div><h2 className="text-3xl font-black tracking-tight sm:text-5xl">Личный подход, понятные объяснения и спокойная атмосфера</h2><p className="mt-5 text-lg leading-8 text-slate-600">{data.about}</p><div className="mt-8 grid gap-4 sm:grid-cols-2">{["Понятные объяснения без сложных терминов", "Индивидуальная программа под цель ученика", "Много практики и живого общения", "Поддержка между занятиями"].map((item) => <div key={item} className="flex gap-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100"><span className="font-black text-cyan-600">✓</span><span className="font-semibold text-slate-700">{item}</span></div>)}</div></div></div></section>;
 }
@@ -2058,7 +2369,8 @@ function Footer({ data, onHome }) { return <footer className="border-t border-sl
 
 export default function App() {
   const [page, setPage] = useState(null);
-  if (page === "students") return <StudentPortal onBack={() => setPage(null)} />;
+  if (page === "students") return <StudentPortal onBack={() => setPage(null)} onOpenLanguage={(lang) => setPage(lang)} />;
+  if (page === "other") return <OtherLanguagesPage onHome={() => setPage(null)} />;
   if (page === "en" || page === "de") return <LanguagePage type={page} onHome={() => setPage(null)} />;
   return <Home onChoose={setPage} />;
 }
