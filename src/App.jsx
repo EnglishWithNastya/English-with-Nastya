@@ -1,5 +1,181 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously } from "firebase/auth";
+import { doc, getFirestore, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+
+// Live-Synchronisation: Firebase-Projekt in .env.local eintragen.
+// Beispiel:
+// VITE_FIREBASE_API_KEY=...
+// VITE_FIREBASE_AUTH_DOMAIN=...
+// VITE_FIREBASE_PROJECT_ID=...
+// VITE_FIREBASE_STORAGE_BUCKET=...
+// VITE_FIREBASE_MESSAGING_SENDER_ID=...
+// VITE_FIREBASE_APP_ID=...
+const firebaseConfig = {
+  apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || "",
+  authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || "",
+  projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || "",
+  storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: import.meta.env?.VITE_FIREBASE_APP_ID || "",
+};
+
+const LIVE_COLLECTION = "language-school-live-state";
+const ACTIVITY_KEY = "live-activity";
+
+let firestoreDb = null;
+try {
+  if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+    const firebaseApp = initializeApp(firebaseConfig);
+    firestoreDb = getFirestore(firebaseApp);
+    const auth = getAuth(firebaseApp);
+    signInAnonymously(auth).catch((error) => {
+      console.warn("Anonyme Firebase-Anmeldung fehlgeschlagen. Firestore-Regeln können Schreibzugriffe blockieren.", error);
+    });
+  }
+} catch (error) {
+  console.warn("Firebase konnte nicht initialisiert werden. Die App arbeitet lokal weiter.", error);
+}
+
+function encodeLiveKey(key) {
+  return encodeURIComponent(String(key)).replace(/\./g, "%2E");
+}
+
+function getLiveDocRef(key) {
+  return firestoreDb ? doc(firestoreDb, LIVE_COLLECTION, encodeLiveKey(key)) : null;
+}
+
+function emitLiveUpdate(key, value) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("live-store-update", { detail: { key, value } }));
+}
+
+function writeLocalCache(key, value) {
+  liveCache.set(key, value);
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // localStorage kann in Preview-/Privacy-Umgebungen gesperrt sein.
+  }
+}
+
+async function writeLiveValue(key, value) {
+  const ref = getLiveDocRef(key);
+  if (!ref) return;
+  await setDoc(ref, { key, value, updatedAt: serverTimestamp() }, { merge: true });
+}
+
+function subscribeLiveKey(key, fallback, onValue) {
+  let closed = false;
+  const initial = safeGet(key, fallback);
+  onValue(initial);
+
+  const localHandler = (event) => {
+    if (event.detail?.key === key) onValue(event.detail.value);
+  };
+  const storageHandler = (event) => {
+    if (event.key !== key || event.newValue == null) return;
+    try {
+      onValue(JSON.parse(event.newValue));
+    } catch {
+      onValue(fallback);
+    }
+  };
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("live-store-update", localHandler);
+    window.addEventListener("storage", storageHandler);
+  }
+
+  const ref = getLiveDocRef(key);
+  const unsubscribeFirestore = ref
+    ? onSnapshot(ref, (snapshot) => {
+        if (closed || !snapshot.exists()) return;
+        const next = snapshot.data()?.value ?? fallback;
+        writeLocalCache(key, next);
+        onValue(next);
+      }, (error) => console.warn(`Realtime-Listener für ${key} fehlgeschlagen`, error))
+    : () => {};
+
+  return () => {
+    closed = true;
+    unsubscribeFirestore();
+    if (typeof window !== "undefined") {
+      window.removeEventListener("live-store-update", localHandler);
+      window.removeEventListener("storage", storageHandler);
+    }
+  };
+}
+
+function useRealtimeKey(key, fallback) {
+  const fallbackRef = useRef(fallback);
+  const [value, setValueState] = useState(() => safeGet(key, fallbackRef.current));
+
+  useEffect(() => {
+    fallbackRef.current = fallback;
+  }, [fallback]);
+
+  useEffect(() => {
+    return subscribeLiveKey(key, fallbackRef.current, setValueState);
+  }, [key]);
+
+  const setValue = (nextValue) => {
+    const resolved = typeof nextValue === "function" ? nextValue(safeGet(key, fallbackRef.current)) : nextValue;
+    setValueState(resolved);
+    safeSet(key, resolved);
+    return resolved;
+  };
+
+  return [value, setValue];
+}
+
+function publishLiveActivity(user, activity, details = {}) {
+  if (!user) return;
+  const current = safeGet(ACTIVITY_KEY, {});
+  safeSet(ACTIVITY_KEY, {
+    ...current,
+    [user]: { user, activity, details, at: Date.now() },
+  });
+}
+
+function useLiveActivities(currentUser) {
+  const [activities] = useRealtimeKey(ACTIVITY_KEY, {});
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 15000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return useMemo(() => {
+    return Object.values(activities || {})
+      .filter((item) => item?.user && item.user !== currentUser && now - Number(item.at || 0) < 45000)
+      .sort((a, b) => Number(b.at || 0) - Number(a.at || 0));
+  }, [activities, currentUser, now]);
+}
+
+function LiveActivityPanel({ currentUser }) {
+  const activities = useLiveActivities(currentUser);
+  return (
+    <div className="mb-6 rounded-[1.75rem] bg-white/90 p-4 shadow-sm ring-1 ring-cyan-100 backdrop-blur">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className={`rounded-full px-4 py-2 text-sm font-black ${firestoreDb ? "bg-emerald-100 text-emerald-800" : "bg-yellow-100 text-orange-800"}`}>{firestoreDb ? "● Live-Synchronisation aktiv" : "● Lokal aktiv – Firebase-Konfiguration fehlt"}</div>
+        <div className="text-sm font-bold text-slate-600">Änderungen an Aufgaben, Chats, Notizen und Fortschritt werden live geteilt.</div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {activities.length ? activities.map((item) => (
+          <span key={`${item.user}-${item.at}`} className="rounded-full bg-cyan-50 px-3 py-2 text-sm font-black text-cyan-800 ring-1 ring-cyan-100">
+            {item.user}: {item.activity}
+          </span>
+        )) : (
+          <span className="rounded-full bg-slate-50 px-3 py-2 text-sm font-bold text-slate-500 ring-1 ring-slate-100">Gerade keine andere sichtbare Aktivität.</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -992,21 +1168,27 @@ function calculateOverallProgress(studentName) {
   return { scores, overall, level: scoreToLevel(overall) };
 }
 
+const liveCache = new Map();
+
 function safeGet(key, fallback) {
+  if (liveCache.has(key)) return liveCache.get(key);
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    const value = raw ? JSON.parse(raw) : fallback;
+    liveCache.set(key, value);
+    return value;
   } catch {
+    liveCache.set(key, fallback);
     return fallback;
   }
 }
 
 function safeSet(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // localStorage unavailable in some environments
-  }
+  writeLocalCache(key, value);
+  emitLiveUpdate(key, value);
+  writeLiveValue(key, value).catch((error) => {
+    console.warn(`Realtime-Speicherung für ${key} fehlgeschlagen. Lokal wurde gespeichert.`, error);
+  });
 }
 
 function Icon({ name, className = "" }) {
@@ -1056,7 +1238,7 @@ function PublicInterestChat({ topic }) {
   const [phone, setPhone] = useState("");
   const [text, setText] = useState("");
   const [activeThreadId, setActiveThreadId] = useState(null);
-  const [threads, setThreads] = useState(safeGet("public-interest-threads", []));
+  const [threads, setThreads] = useRealtimeKey("public-interest-threads", []);
   const [error, setError] = useState("");
   const [popup, setPopup] = useState(false);
   const topicFlag = topic === "de" ? "🇩🇪" : topic === "en" ? "🇬🇧" : topic === "es" ? "🇪🇸" : "🌍";
@@ -1087,6 +1269,7 @@ function PublicInterestChat({ topic }) {
       setActiveThreadId(id);
     }
     saveThreads(nextThreads);
+    publishLiveActivity(cleanName, "hat eine Anfrage geschrieben", { topic });
     setText("");
     setPopup(true);
     window.setTimeout(() => setPopup(false), 2200);
@@ -1314,7 +1497,7 @@ function HomeChoice({ title, text, chip, onClick, icon, color }) {
 }
 
 function PublicMessagesAdmin() {
-  const [threads, setThreads] = useState(safeGet("public-interest-threads", []));
+  const [threads, setThreads] = useRealtimeKey("public-interest-threads", []);
   const [selectedId, setSelectedId] = useState(null);
   const [replyText, setReplyText] = useState("");
   const selectedThread = threads.find((thread) => thread.id === selectedId) || threads[0] || null;
@@ -1338,6 +1521,7 @@ function PublicMessagesAdmin() {
       ],
     } : thread);
     refreshThreads(nextThreads);
+    publishLiveActivity("Anastasia", "antwortet auf eine Anfrage", { threadId: selectedThread.id });
     setReplyText("");
   };
 
@@ -1408,10 +1592,17 @@ function StudentPortal({ onBack, onOpenLanguage }) {
   const [languageVersion, setLanguageVersion] = useState(0);
 
   const quiz = student && student !== adminUsername ? getDailyQuiz(student) : null;
-  const totalPoints = student ? safeGet(`points-${student}`, 0) : 0;
+  const [liveTotalPoints] = useRealtimeKey(student ? `points-${student}` : "points-empty", 0);
+  const totalPoints = student ? liveTotalPoints : 0;
   const isAdmin = student === adminUsername;
   const language = student && (isAdmin ? "Admin" : getStudentLanguageLabel(student));
   const activeLanguage = student && !isAdmin ? getActiveLanguageLabel(student) : null;
+
+  useEffect(() => {
+    if (!student || isAdmin || !quiz) return undefined;
+    publishLiveActivity(student, "ist online", { area: "Portal" });
+    return subscribeLiveKey(`daily-word-${quiz.id}`, { answered: false, correct: false, points: 0, selected: null }, setQuizState);
+  }, [student, isAdmin, quiz?.id, languageVersion]);
 
   const handleLanguageChange = () => {
     if (!student || isAdmin) return;
@@ -1425,7 +1616,7 @@ function StudentPortal({ onBack, onOpenLanguage }) {
     if (accounts[cleanName] && accounts[cleanName] === password) {
       setStudent(cleanName);
       setView(cleanName === adminUsername ? "admin" : "dashboard");
-      setQuizState(cleanName === adminUsername ? null : safeGet(`daily-word-${getDailyQuiz(cleanName).id}`, { answered: false, correct: false, points: 0, selected: null }));
+      if (cleanName !== adminUsername) publishLiveActivity(cleanName, "hat sich eingeloggt", { area: "Portal" });
       setError("");
       setPassword("");
     } else {
@@ -1475,6 +1666,7 @@ function StudentPortal({ onBack, onOpenLanguage }) {
       addTournamentPoints(student, 10);
     }
     setQuizState(nextState);
+    publishLiveActivity(student, correct ? "hat das Wort des Tages richtig gelöst" : "hat das Wort des Tages beantwortet", { selected: option, correct });
   };
 
   if (!student) {
@@ -1499,6 +1691,8 @@ function StudentPortal({ onBack, onOpenLanguage }) {
             <button onClick={logout} className="rounded-2xl bg-slate-950 px-4 py-3 font-black text-white shadow-sm">Выйти</button>
           </div>
         </div>
+
+        <LiveActivityPanel currentUser={student} />
 
         <div className="mb-6 grid gap-3 md:grid-cols-7">
           {[
@@ -1537,7 +1731,7 @@ function AdminPortal({ onBack, logout }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentProfileTab, setStudentProfileTab] = useState("overview");
   const [adminLanguageMode, setAdminLanguageMode] = useState("active");
-  const [attendance, setAttendance] = useState(safeGet("attendance-records", {}));
+  const [attendance, setAttendance] = useRealtimeKey("attendance-records", {});
 
   const actualLessons = (name) => (lessonSchedule[name] || []).filter((lesson) => lesson && !lesson.toLowerCase().includes("schedule will be added"));
 
@@ -1717,6 +1911,8 @@ function AdminPortal({ onBack, logout }) {
             <button onClick={logout} className="rounded-2xl bg-slate-950 px-4 py-3 font-black text-white shadow-sm">Выйти</button>
           </div>
         </div>
+
+        <LiveActivityPanel currentUser="Anastasia" />
 
         <div className="mb-6 grid gap-3 md:grid-cols-6">
           {[["overview", "Ученики", "👥"], ["calendar", "Календарь посещаемости", "📅"], ["revenue", "Доход", "₽"], ["learning", "Учебные меню", "📚"], ["leads", "Сообщения интересующихся", "💬"], ["stats", "Статистика", "📊"]].map(([id, label, icon]) => (
@@ -1964,7 +2160,7 @@ function LearningMenu({ student, adminMode = false, languageOverride = null }) {
   const [access, setAccess] = useState(adminMode || student === adminUsername);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [progress, setProgress] = useState(getLearningProgress(student));
+  const [progress, setProgress] = useRealtimeKey(`learning-progress-${student}`, { unlockedLevel: "A0", completed: {}, scores: {}, answers: {} });
   const [selectedLevel, setSelectedLevel] = useState("A0");
   const [selectedPuzzle, setSelectedPuzzle] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -1973,7 +2169,7 @@ function LearningMenu({ student, adminMode = false, languageOverride = null }) {
   const [revealedAnswers, setRevealedAnswers] = useState({});
   const [selectedMode, setSelectedMode] = useState("normal");
   const [selectedBonusType, setSelectedBonusType] = useState("reading");
-  const [bonusProgress, setBonusProgress] = useState(getBonusProgress(student));
+  const [bonusProgress, setBonusProgress] = useRealtimeKey(`bonus-progress-${student}`, { completed: {}, scores: {}, answers: {} });
 
   const [learningLanguageVersion, setLearningLanguageVersion] = useState(0);
   const activeLearningLanguage = languageOverride || (adminMode && student === adminUsername ? adminLearningLanguage : getLearningLanguage(student));
@@ -2006,6 +2202,7 @@ function LearningMenu({ student, adminMode = false, languageOverride = null }) {
     setAnswers({});
     setSubmitted(false);
     setRevealedAnswers({});
+    publishLiveActivity(student, `öffnet Aufgabe ${level}-${puzzleNumber}`, { level, puzzleNumber, mode: "normal" });
   };
 
   const openBonus = (type, level, bonusNumber) => {
@@ -2017,6 +2214,7 @@ function LearningMenu({ student, adminMode = false, languageOverride = null }) {
     setAnswers({});
     setSubmitted(false);
     setRevealedAnswers({});
+    publishLiveActivity(student, `öffnet Bonus ${type} ${level}-${bonusNumber}`, { level, bonusNumber, mode: type });
   };
 
   const bonusData = selectedMode === "bonus" && selectedPuzzle
@@ -2047,6 +2245,7 @@ function LearningMenu({ student, adminMode = false, languageOverride = null }) {
       explanation: task.explanation,
     }));
     setSubmitted(true);
+    publishLiveActivity(student, `hat ${selectedMode === "normal" ? "eine Aufgabe" : "einen Bonus"} abgegeben: ${score}/${maxScore}`, { selectedLevel, selectedPuzzle, selectedMode, score });
     if (student === adminUsername) return;
     if (selectedMode === "normal") {
       const next = completeLearningPuzzle(student, selectedLevel, selectedPuzzle, score, answerDetails);
@@ -2112,7 +2311,7 @@ function LearningMenu({ student, adminMode = false, languageOverride = null }) {
                 <h3 className="text-lg font-black leading-7 text-slate-950">{task.q}</h3>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {task.options.map((option) => (
-                    <button key={option} disabled={submitted} onClick={() => setAnswers({ ...answers, [index]: option })} className={`rounded-2xl p-3 text-left font-bold ring-1 transition ${correct && option === selected ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : wrong && option === selected ? "bg-red-50 text-red-700 ring-red-200" : submitted && option === task.correct ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : selected === option ? "bg-cyan-50 text-cyan-800 ring-cyan-200" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{option}</button>
+                    <button key={option} disabled={submitted} onClick={() => { setAnswers({ ...answers, [index]: option }); publishLiveActivity(student, `bearbeitet Aufgabe ${selectedLevel}-${selectedPuzzle}`, { question: index + 1, selectedMode }); }} className={`rounded-2xl p-3 text-left font-bold ring-1 transition ${correct && option === selected ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : wrong && option === selected ? "bg-red-50 text-red-700 ring-red-200" : submitted && option === task.correct ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : selected === option ? "bg-cyan-50 text-cyan-800 ring-cyan-200" : "bg-white text-slate-700 ring-slate-100 hover:bg-cyan-50"}`}>{option}</button>
                   ))}
                 </div>
                 {adminMode && (
@@ -2254,7 +2453,7 @@ function StudentLogin({ name, setName, password, setPassword, error, login, onBa
             <motion.div variants={fadeUp} className="mb-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-700 shadow-sm ring-1 ring-cyan-100">Личный кабинет ученика</motion.div>
             <motion.h1 variants={fadeUp} className="text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">Войдите в свой профиль</motion.h1>
             <motion.p variants={fadeUp} className="mt-5 text-lg leading-8 text-slate-600">Введите имя и пароль. После входа откроется только ваш личный кабинет с расписанием, домашними заданиями, словом недели и баллами.</motion.p>
-            <motion.div variants={fadeUp} className="mt-6 rounded-3xl bg-yellow-50 p-5 font-bold text-orange-800 ring-1 ring-yellow-100"><Icon name="shield" /> Демо-версия: для реального запуска нужен защищённый сервер и база данных.</motion.div>
+            <motion.div variants={fadeUp} className="mt-6 rounded-3xl bg-yellow-50 p-5 font-bold text-orange-800 ring-1 ring-yellow-100"><Icon name="shield" /> Live-Version: Fortschritt und Chats können über Firebase Firestore synchronisiert werden. Für echte Zugriffskontrolle sollten die Passwörter zusätzlich durch Firebase Authentication ersetzt werden.</motion.div>
           </motion.div>
 
           <Card className="p-7">
@@ -2275,12 +2474,13 @@ function StudentLogin({ name, setName, password, setPassword, error, login, onBa
 
 function LanguageSwitcher({ student, onChange }) {
   const languages = getStudentLanguages(student);
-  const [language, setLanguage] = useState(getStudentActiveLanguage(student));
+  const [language, setLanguage] = useRealtimeKey(`active-language-${student}`, getStudentActiveLanguage(student));
   if (languages.length <= 1) return null;
 
   const changeLanguage = (nextLanguage) => {
     setLanguage(nextLanguage);
     saveStudentActiveLanguage(student, nextLanguage);
+    publishLiveActivity(student, `wechselt Sprache zu ${languageLabels[nextLanguage] || nextLanguage}`, { language: nextLanguage });
     if (onChange) onChange(nextLanguage);
   };
 
@@ -2299,7 +2499,7 @@ function LanguageSwitcher({ student, onChange }) {
 }
 
 function TournamentWidget({ student, adminMode = false }) {
-  const [tournament, setTournament] = useState(getTournament());
+  const [tournament, setTournament] = useRealtimeKey(`daily-word-tournament-${getMonthKey()}`, { participants: {}, usedNames: {}, points: {} });
   const [nickname, setNickname] = useState(tournament.participants?.[student] || "");
   const [message, setMessage] = useState("");
   const monthKey = getMonthKey();
@@ -2367,8 +2567,8 @@ function ChatWindow({ student, channel, adminMode = false }) {
   const title = channel === "student" ? "Чат ученика" : "Чат родителей";
   const storageKey = `chat-${student}-${channel}`;
   const requestKey = `schedule-change-requests-${student}-${channel}`;
-  const [messages, setMessages] = useState(safeGet(storageKey, []));
-  const [requests, setRequests] = useState(safeGet(requestKey, []));
+  const [messages, setMessages] = useRealtimeKey(storageKey, []);
+  const [requests, setRequests] = useRealtimeKey(requestKey, []);
   const [text, setText] = useState("");
   const [requestText, setRequestText] = useState("");
   const [requestLesson, setRequestLesson] = useState("");
@@ -2387,6 +2587,7 @@ function ChatWindow({ student, channel, adminMode = false }) {
     setMessages(next);
     safeSet(storageKey, next);
     setText("");
+    publishLiveActivity(adminMode ? "Anastasia" : student, `hat im ${title} geschrieben`, { student, channel });
     setChatPopup(true);
     window.setTimeout(() => setChatPopup(false), 2200);
   };
@@ -2415,6 +2616,7 @@ function ChatWindow({ student, channel, adminMode = false }) {
     safeSet(storageKey, chatNext);
     setChatPopup(true);
     window.setTimeout(() => setChatPopup(false), 2200);
+    publishLiveActivity(adminMode ? "Anastasia" : student, "hat eine Terminänderung gesendet", { student, channel, lesson });
     setRequestText("");
     setRequestLesson("");
   };
@@ -2423,6 +2625,7 @@ function ChatWindow({ student, channel, adminMode = false }) {
     const next = requests.map((item, i) => i === index ? { ...item, status } : item);
     setRequests(next);
     safeSet(requestKey, next);
+    publishLiveActivity("Anastasia", `Terminstatus: ${status}`, { student, channel });
   };
 
   return (
@@ -2442,7 +2645,7 @@ function ChatWindow({ student, channel, adminMode = false }) {
         )) : <div className="text-sm font-bold text-slate-500">Сообщений пока нет.</div>}
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-        <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Написать сообщение Anastasia..." />
+        <input value={text} onChange={(e) => { setText(e.target.value); publishLiveActivity(adminMode ? "Anastasia" : student, `tippt im ${title}`, { student, channel }); }} onKeyDown={(e) => e.key === "Enter" && send()} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100" placeholder="Написать сообщение Anastasia..." />
         <button onClick={send} className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white">Отправить</button>
       </div>
 
@@ -2454,7 +2657,7 @@ function ChatWindow({ student, channel, adminMode = false }) {
             <option value="">Выберите одноразовый слот на 1 час</option>
             {slotOptions.map((slot) => <option key={slot} value={slot}>{slot}</option>)}
           </select>
-          <input value={requestText} onChange={(e) => setRequestText(e.target.value)} className="rounded-2xl border border-yellow-200 bg-white px-4 py-3 outline-none" placeholder="Например: можно перенести урок на пятницу вечером?" />
+          <input value={requestText} onChange={(e) => { setRequestText(e.target.value); publishLiveActivity(adminMode ? "Anastasia" : student, "tippt eine Terminänderung", { student, channel }); }} className="rounded-2xl border border-yellow-200 bg-white px-4 py-3 outline-none" placeholder="Например: можно перенести урок на пятницу вечером?" />
           <button onClick={sendScheduleRequest} className="rounded-2xl bg-orange-400 px-5 py-3 font-black text-white shadow-sm">Отправить заявку</button>
         </div>
         <div className="mt-4 grid gap-3">
@@ -2539,7 +2742,7 @@ function LanguageRecommendation({ student, onOpenLanguage }) {
 
 function StudentDashboard({ student, quiz, quizState, totalPoints, answerWeeklyQuiz }) {
   const nextLesson = lessonSchedule[student]?.[0] || "Будет добавлено позже";
-  const wordStats = getWordStats(student);
+  const [wordStats] = useRealtimeKey(`word-stats-${student}`, { correct: 0, wrong: 0, unanswered: 0, streak: 0, level: "A0" });
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="grid gap-6">
@@ -2569,7 +2772,7 @@ function Stat({ title, value, icon }) {
 }
 
 function WeeklyWord({ student, quiz, quizState, answerWeeklyQuiz }) {
-  const wordStats = student ? getWordStats(student) : { correct: 0, wrong: 0 };
+  const [wordStats] = useRealtimeKey(student ? `word-stats-${student}` : "word-stats-empty", { correct: 0, wrong: 0, unanswered: 0, streak: 0, level: "A0" });
   return (
     <div className="rounded-[1.75rem] bg-gradient-to-br from-cyan-50 via-white to-yellow-50 p-6 ring-1 ring-cyan-100">
       <div className="mb-3 inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-sm">Слово дня • обновляется каждый день в 00:00 • уровень {quiz.level}</div>
@@ -2577,7 +2780,7 @@ function WeeklyWord({ student, quiz, quizState, answerWeeklyQuiz }) {
       <p className="mt-2 text-slate-600">Выберите правильный перевод. За правильный ответ — 10 баллов. После 3 правильных ответов подряд уровень повышается. После ошибки уровень снижается на 1.</p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {quiz.options.map((option) => (
-          <button key={option} onClick={() => answerWeeklyQuiz(option)} disabled={quizState?.answered} className={`rounded-2xl p-4 text-left font-black ring-1 transition ${quizState?.answered && option === quiz.answer ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : quizState?.answered && option === quizState.selected ? "bg-red-50 text-red-700 ring-red-200" : "bg-white text-slate-800 ring-slate-100 hover:bg-cyan-50"}`}>{option}</button>
+          <button key={option} onClick={() => { publishLiveActivity(student, "löst das Wort des Tages", { selected: option }); answerWeeklyQuiz(option); }} disabled={quizState?.answered} className={`rounded-2xl p-4 text-left font-black ring-1 transition ${quizState?.answered && option === quiz.answer ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : quizState?.answered && option === quizState.selected ? "bg-red-50 text-red-700 ring-red-200" : "bg-white text-slate-800 ring-slate-100 hover:bg-cyan-50"}`}>{option}</button>
         ))}
       </div>
       {quizState?.answered && <div className={`mt-5 rounded-2xl p-4 font-black ${quizState.correct ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{quizState.correct ? "Правильно! +10 баллов." : `Неправильно. Правильный ответ: ${quiz.answer}.`}</div>}
@@ -2590,12 +2793,13 @@ function WeeklyWord({ student, quiz, quizState, answerWeeklyQuiz }) {
 }
 
 function StudentInfo({ student, quiz, quizState, answerWeeklyQuiz, adminMode = false }) {
-  const [content, setContent] = useState(getStudentContent(student));
+  const [content, setContent] = useRealtimeKey(`student-content-${student}`, getStudentContent(student));
 
   const updateContent = (field, value) => {
     const next = { ...content, [field]: value };
     setContent(next);
     saveStudentContent(student, next);
+    publishLiveActivity(adminMode ? "Anastasia" : student, `bearbeitet ${field}`, { student, field });
   };
 
   const studentItems = [
@@ -2637,12 +2841,13 @@ function StudentInfo({ student, quiz, quizState, answerWeeklyQuiz, adminMode = f
 }
 
 function ParentsInfo({ student, adminMode = false }) {
-  const [content, setContent] = useState(getStudentContent(student));
+  const [content, setContent] = useRealtimeKey(`student-content-${student}`, getStudentContent(student));
 
   const updateContent = (field, value) => {
     const next = { ...content, [field]: value };
     setContent(next);
     saveStudentContent(student, next);
+    publishLiveActivity(adminMode ? "Anastasia" : student, `bearbeitet ${field}`, { student, field });
   };
 
   const parentItems = [
@@ -2697,8 +2902,8 @@ function StudentSchedule({ student }) {
 }
 
 function ProgressInfo({ student, totalPoints, adminMode = false }) {
-  const [settings, setSettings] = useState(getProgressSettings(student));
-  const [previousLevel, setPreviousLevel] = useState(() => safeGet(`last-progress-level-${student}`, "A0"));
+  const [settings, setSettings] = useRealtimeKey(`progress-settings-${student}`, { includeLearningMenu: false, teacherAssessment: { Vocabulary: 0, Grammar: 0, Speaking: 0, Listening: 0 } });
+  const [previousLevel, setPreviousLevel] = useRealtimeKey(`last-progress-level-${student}`, "A0");
   const { scores, overall, level } = calculateOverallProgress(student);
   const showCongrats = levelIndex(level) > levelIndex(previousLevel);
 
@@ -2719,15 +2924,17 @@ function ProgressInfo({ student, totalPoints, adminMode = false }) {
     };
     setSettings(next);
     saveProgressSettings(student, next);
+    publishLiveActivity(adminMode ? "Anastasia" : student, `aktualisiert Fortschritt: ${category}`, { student, category });
   };
 
   const toggleLearningMenu = () => {
     const next = { ...settings, includeLearningMenu: !settings.includeLearningMenu };
     setSettings(next);
     saveProgressSettings(student, next);
+    publishLiveActivity(adminMode ? "Anastasia" : student, "ändert Fortschrittseinstellungen", { student });
   };
 
-  const wordStats = getWordStats(student);
+  const [wordStats] = useRealtimeKey(`word-stats-${student}`, { correct: 0, wrong: 0, unanswered: 0, streak: 0, level: "A0" });
   const learningScore = learningMenuScore(student);
 
   return (
